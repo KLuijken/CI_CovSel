@@ -16,6 +16,8 @@ RUN <- function(scenario, nsim,B, Allmodels, Allmarginals){
   #    Allmodels    = models used, c("Full", "Selectedp0.157", "Selectedp0.320")
   #    Allmarginals = marginals computed or estimated, c("Truth","Unadjusted","Full", "Selectedp0.157", "Selectedp0.320")
   
+  # Test
+  
   S <- get(scenario)
   
   for(j in 1:nrow(S)){
