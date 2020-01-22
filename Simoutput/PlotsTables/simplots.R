@@ -6,16 +6,17 @@
 # File content: simulation plots
 ####################################################
 
-require(Rloop)
+require(loopR)
 
 #-----------------------------------------------------------------------#
 # Scenario 1
 #-----------------------------------------------------------------------#
 
 # Load input
-allfilesS1 <- list.files(paste0(filepath,"/Simoutput/S1"), pattern = ".rds")
+setup <- readRDS("Setup.rds")
+for(i in 1:length(setup)){assign(names(setup)[i], unlist(setup[[i]]))}
 setwd(paste0(filepath,"/Simoutput/S1"))
-allS1 <- do.call(list, lapply(1:length(allfilesS1),FUN= function(x) readRDS(allfilesS1[x])))
+allS1 <- do.call(list, lapply(1:nrow(S1), FUN = function(x) readRDS(paste0(x,".rds"))))
 
 
 #  S1, bias-------------------------------------------------------------#
