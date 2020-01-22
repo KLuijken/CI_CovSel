@@ -6,17 +6,21 @@
 # File content: simulation output evaluation and summary
 ####################################################
 
-allfilesS1 <- list.files(paste0(filepath,"/Simoutput/S1"), pattern = ".rds")
+# Load input parameters
+setup <- readRDS("Setup.rds")
+for(i in 1:length(setup)){assign(names(setup)[i], unlist(setup[[i]]))}
+
+# Load simulation output scenario 1
 setwd(paste0(filepath,"/Simoutput/S1"))
-allS1 <- do.call(list, lapply(1:length(allfilesS1),FUN= function(x) readRDS(allfilesS1[x])))
+allS1 <- do.call(list, lapply(1:nrow(S1), FUN = function(x) readRDS(paste0(x,".rds"))))
 
-allfilesS2 <- list.files(paste0(filepath,"/Simoutput/S2"), pattern = ".rds")
+# Load simulation output scenario 2
 setwd(paste0(filepath,"/Simoutput/S2"))
-allS2 <- do.call(list, lapply(1:length(allfilesS2),FUN= function(x) readRDS(allfilesS2[x])))
+allS2 <- do.call(list, lapply(1:nrow(S2), FUN = function(x) readRDS(paste0(x,".rds"))))
 
-allfilesS3 <- list.files(paste0(filepath,"/Simoutput/S3"), pattern = ".rds")
+# Load simulation output scenario 3
 setwd(paste0(filepath,"/Simoutput/S3"))
-allS3 <- do.call(list, lapply(1:length(allfilesS3),FUN= function(x) readRDS(allfilesS3[x])))
+allS3 <- do.call(list, lapply(1:nrow(S3), FUN = function(x) readRDS(paste0(x,".rds"))))
 
 
 #-----------------------------------------------------------------------#
