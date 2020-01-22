@@ -346,7 +346,7 @@ RUN <- function(scenario, nsim,B, Allmodels, Allmarginals){
       
     }
   output <- list(Setup = Setup, Model = Model, Marginal = Marginal, Warning = Warning, BSWarning = BSWarning, Warning.int=Warning.int,BSWarning.int=BSWarning.int)
-  saveRDS(output, file = paste0(filepath,"Simoutput/",scenario,"/",j,".rds"))
+  saveRDS(output, file = paste0(filepath,"Simoutput/",scenario,"/",scenario,"_",j,".rds"))
   }
   
 }
