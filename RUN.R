@@ -83,6 +83,10 @@ RUN <- function(scenario, nsim,B, Allmodels, Allmarginals){
     bL1Y <- setbL1Y/(sqrt(S[j,"nL"]/2))
     bL1A <- setbL1A/(sqrt(S[j,"nL"]/2))
     
+    # Set Seeds
+    full.seeds <- readRDS(paste0(filepath,"Siminput/",scenario,"/seeds",scenario,"_",j,".rds"))
+    bs.seeds   <- readRDS(paste0(filepath,"Siminput/",scenario,"/bsseeds",scenario,"_",j,".rds"))
+    
     #-----------------------------------------------------------------------#
     # Truth
     #-----------------------------------------------------------------------#
@@ -98,7 +102,7 @@ RUN <- function(scenario, nsim,B, Allmodels, Allmarginals){
     
     for(i in 1:nsim){
       # generate A, Y and set of L
-      set.seed(readRDS(paste0(filepath,"Siminput/",scenario,"/seeds",scenario,"_",j,".rds"))[i])
+      set.seed(full.seeds[i])
       sigma                  <- matrix(S[j,"rhoL"], nrow=S[j,"nL"],ncol=S[j,"nL"])
       diag(sigma)            <- 1
       L                      <- mvrnorm(S[j,"nobs"],c(rep(0,times=S[j,"nL"])), sigma)
@@ -229,7 +233,7 @@ RUN <- function(scenario, nsim,B, Allmodels, Allmarginals){
       
       # # Resample
       for(k in 1:B){
-         set.seed(readRDS(paste0(filepath,"Siminput/",scenario,"/bsseeds",scenario,"_",j,".rds"))[k,i])
+         set.seed(bs.seeds[k,i])
          bs <- sample(1:S[j,"nobs"],size=S[j,"nobs"],replace=T)
          assign("databs", data.frame(matrix(c(Y,A,L1,L2),nrow=S[j,"nobs"], ncol=2+S[j,"nL"], dimnames = list(NULL,c("Y","A",paste0("L1",1:(S[j,"nL"]/2)),paste0("L2",1:(S[j,"nL"]/2))))))[bs,], envir = parent.frame())
          
