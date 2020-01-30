@@ -110,7 +110,7 @@ RUN <- function(scenario, nsim,B, Allmodels, Allmarginals){
       L2                     <- L[,((S[j,"nL"]/2)+1):S[j,"nL"]]
       A                      <- rbinom(S[j,"nobs"],1,plogis(intA + as.matrix(L1)%*%rep(bL1A,times=(S[j,"nL"]/2)) + as.matrix(L2)%*%rep(S[j,"bL2A"],times=(S[j,"nL"]/2))))
       Setup["Pexposure",i]   <- sum(A)/S[j,"nobs"]
-      Y                      <- rbinom(S[j,"nobs"],1,plogis(intY + S[j,"bAY"]*A + as.matrix(L1)%*%rep(bL1Y,times=(S[j,"nL"]/2)) + as.matrix(L2)%*%rep(S[j,"bL2A"],times=(S[j,"nL"]/2))))
+      Y                      <- rbinom(S[j,"nobs"],1,plogis(S[j,"bAY"]*(A-mean(A)) + as.matrix(L1)%*%rep(bL1Y,times=(S[j,"nL"]/2)) + as.matrix(L2)%*%rep(S[j,"bL2A"],times=(S[j,"nL"]/2))))
       Setup["Poutcome",i]    <- sum(Y)/S[j,"nobs"]
       
       # Store data such that it is available within the function

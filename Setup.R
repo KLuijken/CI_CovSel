@@ -29,10 +29,9 @@ Allmarginals <- c("Truth","Unadjusted","Full", "Selectedp0.157", "Selectedp0.320
 
 
 # Set dgm parameters
-intA    <- 0
-intY    <- -0.48
-setbL1Y <- 1
-setbL1A <- 1
+intA    <- 0                    # Intercept for generating exposure
+setbL1Y <- 1                    # Static effect of covariate(s) L1 on exposure A (unconditional, later on standardized over number of covariates in L1)
+setbL1A <- 1                    # Static effect of covariate(s) L1 on outcome Y (unconditional, later on standardized over number of covariates in L1)
 
 # Simulation parameters
 nsim   <- 25                    # Number of times the simulations are repeated
