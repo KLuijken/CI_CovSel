@@ -29,8 +29,8 @@ Truth <- function(S,j,bL1Y, bL1A){
   x           <- expand.grid(values,values)
   dL          <- dmvnorm(x,mean=c(rep(0,times=2)), sigma=sigma)
   
-  pY0     		<- plogis((intY + bL1Y*x[,1] + S[j,"bL2Y"]*x[,2]))*(dL*dx) 
-  pY1     		<- plogis((intY + bL1Y*x[,1] + S[j,"bL2Y"]*x[,2] + S[j,"bAY"]))*(dL*dx) 
+  pY0     		<- plogis((bL1Y*x[,1] + S[j,"bL2Y"]*x[,2]))*(dL*dx) 
+  pY1     		<- plogis((bL1Y*x[,1] + S[j,"bL2Y"]*x[,2] + S[j,"bAY"]))*(dL*dx) 
   
   return(list(pY0=pY0, pY1=pY1))
 }

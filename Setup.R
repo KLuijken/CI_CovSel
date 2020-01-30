@@ -92,7 +92,6 @@ Setup <- list(
     Allmodels = Allmodels,
     Allmarginals = Allmarginals,
     intA = intA,
-    intY = intY,
     setbL1Y = setbL1Y,
     setbL1A = setbL1A,
     nsim   = nsim,
