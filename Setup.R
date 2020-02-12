@@ -34,7 +34,7 @@ setbL1A <- 1                    # Static effect of covariate(s) L1 on outcome Y 
 
 # Simulation parameters
 nsim   <- 25                    # Number of times the simulations are repeated
-B      <- 5                     # Number of bootstrap samples
+B      <- 100                   # Number of bootstrap samples
 rhoL   <- seq(0,0.6, by=0.3)    # Mutual correlation of covariates, L
 nobs   <- seq(100, 300, by=100) # Number of observations in one sample
 nL     <- c(2,6,10)             # Number of covariates, L
@@ -109,7 +109,7 @@ Setup <- list(
     S2     = S2,
     S3     = S3)
 
-saveRDS(Setup,paste0(filepath,"Simoutput/PlotsTables/Setup.rds"))
+saveRDS(Setup,paste0(filepath,"PlotsTables/Setup.rds"))
 
 #-----------------------------------------------------------------------#
 # Run simulation, output stored in RDS-files
