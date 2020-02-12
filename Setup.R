@@ -6,8 +6,7 @@
 ##############################################
 
 # This directory is used to save and load documents
-#filepath <- "//vf-d2-home/d2home$/kluijken/MyDocs/Projects/CovSelection/Simulations/CovSel_Simulations_20200106/"
-filepath <- "C:/Users/Eigenaar/Desktop/LUMC/Projects/CovSel/Simulations/CovSel_Simulations_20200116/"
+filepath <- "//vf-d2-home/d2home$/kluijken/MyDocs/Projects/CovSelection/Simulations/CI_CovSel/"
 # Note that simulation output is stored in files filepath/Simoutput/S1...S3
 # Make sure filepath ends with "/
 
