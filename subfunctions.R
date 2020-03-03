@@ -80,10 +80,10 @@ BackwardFR <- function (object, scope, steps = 1000, slstay = 0.05, trace = TRUE
   while (istep < steps & working$df >= 2) {
     istep <- istep + 1
     mat <- drop1(working)
-    if (all(mat[, 3] < slstay)) 
-      break
-    inscope <- match(scope, rownames(mat))
+    inscope <- match(scope, rownames(mat))  ###GH changed ordering of this and the next three lines
     inscope <- inscope[!is.na(inscope)]
+    if (all(mat[inscope, 3] < slstay))    ### GH added inscope to subset the p-values. This was crucial!!
+      break
     removal <- rownames(mat)[mat[, 3] == max(mat[inscope, 
                                                  3])]
     newform = as.formula(paste("~.-", removal))
@@ -91,6 +91,9 @@ BackwardFR <- function (object, scope, steps = 1000, slstay = 0.05, trace = TRUE
       working <- update(working, formula = newform, pl = FALSE)
     else working <- update(working, formula = newform)
     if (trace) {
+      cat("drop1:\n")   ### GH: added it to see what happens, can be delted 
+      print(mat)           ### GH: added it to see what happens, can be delted 
+      cat("\n\n")
       cat("Step ", istep, ": removed ", removal, 
           " (P=", max(mat[, 3]), ")\n")
       if (printwork) {
