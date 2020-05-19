@@ -66,7 +66,7 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
   out <- data.table(unique(results[['Scennum']]),names(bias),
                     paste0(method,"_",pcutoff), cbind(bias,empSE,empVar,mse))
   colnames(out) <- c("scen_num","model","method",
-                     paste0(c("bias.","empSE.","empvar.","MSE."),estimator))
+                     paste0(c("bias_","empSE_","empvar_","MSE_"),estimator))
   
   return(out)
 }
