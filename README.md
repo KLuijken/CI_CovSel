@@ -6,7 +6,7 @@ Code of the simulation study from the manuscript 'Selection of covariates for co
 ## Generating data and running simulation study
 The R code in ./rcode/poc performs a proof of concept simulation. The results are stored as .rds file in .data/poc
 
-The R code in /rcode/dgm can be used to generate the data and the R code in /rcode/sim can be used to run the simulation study. Data will be saved as .rds files in /data/raw.
+The R code in /rcode/dgm can be used to generate the data and the R code in /rcode/sim can be used to run the simulation study. Data are saved as .rds files in /data/raw.
 
 ## Processing results of simulation study
 The R code in ./rcode/visualisation creates figures depicting the results of the simulation study. The script produces .pdf files. The scripts uses the .rds files available in ./data/summarised. The output of the script is saved in .results/figures.
