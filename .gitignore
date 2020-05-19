@@ -1,2 +1,7 @@
-Siminput/
-Simoutput/
+.Rproj.user
+results/figures/
+results/output/
+results/tables/
+data/raw
+data/summarised
+data/poc
