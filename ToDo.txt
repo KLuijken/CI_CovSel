@@ -1,2 +1,0 @@
-How to compute unajusted analysis only once per analysis_scenario?
-Add storage of warnings + diagnostics evaluation (in ./rcode/sumsim file)
