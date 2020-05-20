@@ -119,7 +119,7 @@ sim_one_datagen_scenario <- function(datagen_scenario,
 run_sim <- function(rep, 
                     use_datagen_scenarios,
                     use_analysis_scenarios,
-                    seeds){
+                    seeds = get_seeds(rep = rep)){
   invisible(apply(use_datagen_scenarios, 
                   1, 
                   FUN = sim_one_datagen_scenario, 
