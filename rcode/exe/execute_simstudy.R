@@ -22,9 +22,10 @@ use_datagen_scenarios <- datagen_scenarios()[1:10,]
 
 dirpaths  <- lapply(create_dirpaths(use_analysis_scenarios = analysis_scenarios()),
        dir.create)
-filepaths <- lapply(dirpaths,
-                    FUN = function(x) create_filepaths(dirpaths = dirpaths[x],
+filepaths <- lapply(create_dirpaths(use_analysis_scenarios = analysis_scenarios()),
+                    FUN = function(x) create_filepaths(dirpaths = x,
                                                        use_datagen_scenarios = use_datagen_scenarios))
+
 invisible(lapply(unlist(filepaths),
                  FUN= function(x) saveRDS(NULL,file=x)))
 
