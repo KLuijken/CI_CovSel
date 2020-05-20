@@ -68,6 +68,7 @@ perform_one_run <- function(datagen_scenario,
                        bYL1 = datagen_scenario[['bYL1']],
                        bYL2 = datagen_scenario[['bYL2']],
                        bYL3 = datagen_scenario[['bYL3']],
+                       Yint = datagen_scenario[['Yint']],
                        sd_UY = datagen_scenario[['sd_UY']],
                        rhoL = datagen_scenario[['rhoL']],
                        seed = seed)
