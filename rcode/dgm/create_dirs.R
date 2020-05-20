@@ -27,7 +27,7 @@ create_dirpaths <- function(use_analysis_scenarios){
 # Function to create empty rds files to speed up saving during simruns
 
 create_filepaths <- function(dirpaths, use_datagen_scenarios){
-  filename <- paste0("S",unique(use_datagen_scenarios[['scen_num']]),".rds")
+  filename <- paste0("S",use_datagen_scenarios$scen_num,".rds")
   filepath <- paste0(dirpaths,"/",filename)
   
   return(filepath)
