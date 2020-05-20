@@ -10,3 +10,4 @@ data/results_raw
 
 .Rhistory
 *.rds
+*.Rproj
