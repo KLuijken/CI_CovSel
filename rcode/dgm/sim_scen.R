@@ -24,6 +24,7 @@ datagen_scenarios <- function(){
   nL    <- 9
   bAL1  <- bAL2  <- bAL3  <- c(0,0.5,1)
   bYL1  <- bYL2  <- bYL3  <- c(0,0.5,1)
+  Yint  <- 0
   sd_UY <- c(0.01,1)
   rhoL  <- c(0,0.3,0.7)
   
@@ -36,6 +37,7 @@ datagen_scenarios <- function(){
                                    bYL1,
                                    bYL2,
                                    bYL3,
+                                   Yint,
                                    sd_UY,
                                    rhoL)
   # Add scenarios number to keep track of results
@@ -48,6 +50,7 @@ datagen_scenarios <- function(){
                                    "bYL1",
                                    "bYL2",
                                    "bYL3",
+                                   "Yint",
                                    "sd_UY",
                                    "rhoL",
                                    "scen_num")

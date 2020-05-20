@@ -16,6 +16,7 @@ select_scenario_numbers <- function(nobs = NA,
                                     bYL1 = NA,
                                     bYL2 = NA,
                                     bYL3 = NA,
+                                    Yint = NA,
                                     sd_UY = NA,
                                     rhoL = NA){
   selection <- datagen_scenarios()[ifelse(is.na(nobs),TRUE,datagen_scenarios()[["nobs"]]%in% nobs) &
@@ -26,6 +27,7 @@ select_scenario_numbers <- function(nobs = NA,
                                      ifelse(is.na(bYL1),TRUE,datagen_scenarios()[["bYL1"]]%in% bYL1) &
                                      ifelse(is.na(bYL2),TRUE,datagen_scenarios()[["bYL2"]]%in% bYL2) &
                                      ifelse(is.na(bYL3),TRUE,datagen_scenarios()[["bYL3"]]%in% bYL3) &
+                                     ifelse(is.na(Yint),TRUE,datagen_scenarios()[["Yint"]]%in% Yint) &
                                      ifelse(is.na(sd_UY),TRUE,datagen_scenarios()[["sd_UY"]]%in% sd_UY) &
                                      ifelse(is.na(rhoL),TRUE,datagen_scenarios()[["rhoL"]]%in% rhoL),]
   selected_scennums <- unique(selection[['scen_num']])

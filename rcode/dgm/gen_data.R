@@ -28,6 +28,7 @@ gen_data <- function(nobs,
                      bYL1,
                      bYL2,
                      bYL3,
+                     Yint,
                      sd_UY,
                      rhoL,
                      seed){
@@ -51,7 +52,7 @@ gen_data <- function(nobs,
                                 L[,(2*nL/3+1):nL] * bAL3))
   # Generate outcome:
   Y <- rbinom(nobs, 1,
-                         plogis(L[,1:(nL/3)] * bYL1 +
+                         plogis(Yint + L[,1:(nL/3)] * bYL1 +
                                 L[,(nL/3+1):(2*nL/3)] * bYL2 + 
                                 L[,(2*nL/3+1):nL] * bYL3 + UY))
   
