@@ -119,7 +119,7 @@ analyse_data <- function(analysis_scenario,
                analysis_scenario[['pcutoff']],
                sep="_")
   file <- paste0("S",unique(results[["Scennum"]]))
-  results <- cbind(results, filepath = paste0("./data/raw/",dir,"/",file,".rds"))
+  results <- cbind(results, filepath = paste0("./data/results_raw/",dir,"/",file,".rds"))
   
   return(results)
 }
