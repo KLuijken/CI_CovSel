@@ -56,7 +56,7 @@ MSE <- function(results,
 sum_one_scenario <- function(scen_num, method, pcutoff,
                 estimator,
                 truth){
-  results <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",scen_num,".rds"))
+  results <- readRDS(paste0("./data/results_raw/",method,"_",pcutoff,"/S",scen_num,".rds"))
 
   bias <- Bias(results = results, estimator = estimator, truth = truth)
   empSE <- EmpSE(results = results, estimator = estimator)
@@ -72,11 +72,11 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
 }
 
 # test, remove this when all works
-sum_one_scenario(scen_num = 481,
-                 method = "ML",
-                 pcutoff = 0.157,
-                 estimator = 'MRR',
-                 truth = 1)
+# sum_one_scenario(scen_num = 481,
+#                  method = "ML",
+#                  pcutoff = 0.157,
+#                  estimator = 'MRR',
+#                  truth = 1)
 
 
 
@@ -99,10 +99,10 @@ sum_multiple_scenarios <- function(use_simulation_scenarios,
 
 # test, remove this when all works
 
-sum_multiple_scenarios(select_scenario_numbers()[c(1:10)],
-                       method = "ML",
-                       pcutoff = 0.157,
-                       estimator = 'MRR',
-                       truth = 1)
+# sum_multiple_scenarios(select_scenario_numbers()[c(1:10)],
+#                        method = "ML",
+#                        pcutoff = 0.157,
+#                        estimator = 'MRR',
+#                        truth = 1)
 
 
