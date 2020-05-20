@@ -15,7 +15,8 @@ source(file = "./rcode/sumsim/summarize_simulation.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
 use_datagen_scenarios <- datagen_scenarios()[1:10,]
-
+use_analysis_scenarios <- analysis_scenarios()
+use_simulation_scenarios <- 1:10
 
 # Create filestructure  ----
 #------------------------------------------------------------------------------#
@@ -43,7 +44,7 @@ run_sim(rep = 5,
 #------------------------------------------------------------------------------#
 # summarize_sim()
 invisible(lapply(analysis_scenarios()[['method']],
-                 FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = select_scenario_numbers(),
+                 FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = use_simulation_scenarios,
                                                           method = analysis_scenarios()[['method']][x],                         
                                                           pcutoff = 0.157,
                                                           estimator = 'MRR',
