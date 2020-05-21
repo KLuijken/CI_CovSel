@@ -97,7 +97,7 @@ sim_one_datagen_scenario <- function(datagen_scenario,
                                      seeds){
   scen_num <- as.numeric(datagen_scenario['scen_num'])
   for(i in 1:rep){
-    seed = seeds[(rep * scen_num + i)]
+    seed = seeds[(rep * (scen_num-1) + i)]
     perform_one_run(datagen_scenario = datagen_scenario,
                     use_analysis_scenarios = use_analysis_scenarios,
                     seed = seed)
