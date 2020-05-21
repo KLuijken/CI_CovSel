@@ -14,9 +14,10 @@ source(file = "./rcode/sim/run_sim.R")
 source(file = "./rcode/sumsim/summarize_simulation.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
-use_datagen_scenarios <- datagen_scenarios()[1:10,]
+use_datagen_scenarios <- datagen_scenarios()[1:20,]
 use_analysis_scenarios <- analysis_scenarios()
-use_simulation_scenarios <- 1:10
+use_simulation_scenarios <- 1:nrow(use_datagen_scenarios)
+rep <- 10
 
 # Create filestructure  ----
 #------------------------------------------------------------------------------#
@@ -34,7 +35,7 @@ invisible(lapply(unlist(filepaths),
 # Run simulation study  ----
 #------------------------------------------------------------------------------#
 # run_sim()
-run_sim(rep = 5,
+run_sim(rep = rep,
         use_datagen_scenarios = use_datagen_scenarios,
         use_analysis_scenarios = use_analysis_scenarios)
 
