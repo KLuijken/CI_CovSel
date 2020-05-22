@@ -46,7 +46,7 @@ analyse_data <- function(analysis_scenario,
                     data = data)
 
   # Obtain marginal risk ratio and marginal odds ratio
-  marginals_full    <- unlist(estimate_marginals(data =data,
+  marginals_full    <- unlist(estimate_marginals(data = data,
                                           int = full$M_int$coefficients[1],
                                           modelcoefs = full$M$coefficients[-1]))
   
@@ -59,18 +59,18 @@ analyse_data <- function(analysis_scenario,
   results_full      <- data.table(scen_num, seed,"Full",
                                   analysis_scenario[['method']],
                                   t(marginals_full), t(coefficients_full), NA, NA)
-  
+
   # # Use backward elimination on full model (either ML or FLIC)
   # selected <- tryCatch.W.E(backwardf(object = full$M,
-  #                                     sls = analysis_scenario[['pcutoff']],
+  #                                     slstay = analysis_scenario[['pcutoff']],
   #                                     trace = FALSE,
   #                                     scope = c(paste0("L",(1:datagen_scenario[['nL']])))))
-  # 
+  
   # # Obtain warnings about model estimation
   # selected <- pre_model(inputmodel = selected,
   #                   datagen_scenario = datagen_scenario,
   #                   data = data)
-  # 
+
   # # Obtain marginal risk ratio and marginal odds ratio
   # marginals_sel    <- unlist(estimate_marginals(data =data,
   #                                        int = selected$M_int$coefficients[1], 
