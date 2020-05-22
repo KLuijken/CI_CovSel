@@ -63,7 +63,7 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
   empVar <- EmpVar(results = results, estimator = estimator)
   mse <- MSE(results = results, estimator = estimator, truth = truth)
   
-  out <- data.table(unique(results[['Scennum']]),names(bias),
+  out <- data.table(unique(results[['scennum']]),names(bias),
                     paste0(method,"_",pcutoff), cbind(bias,empSE,empVar,mse))
   colnames(out) <- c("scen_num","model","method",
                      paste0(c("bias_","empSE_","empvar_","MSE_"),estimator))
@@ -72,11 +72,11 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
 }
 
 # test, remove this when all works
-sum_one_scenario(scen_num = 481,
-                 method = "ML",
-                 pcutoff = 0.157,
-                 estimator = 'MRR',
-                 truth = 1)
+# sum_one_scenario(scen_num = 481,
+#                  method = "ML",
+#                  pcutoff = 0.157,
+#                  estimator = 'MRR',
+#                  truth = 1)
 
 
 
@@ -99,10 +99,10 @@ sum_multiple_scenarios <- function(use_simulation_scenarios,
 
 # test, remove this when all works
 
-sum_multiple_scenarios(select_scenario_numbers()[c(1:10)],
-                       method = "ML",
-                       pcutoff = 0.157,
-                       estimator = 'MRR',
-                       truth = 1)
+# sum_multiple_scenarios(select_scenario_numbers()[c(1:10)],
+#                        method = "ML",
+#                        pcutoff = 0.157,
+#                        estimator = 'MRR',
+#                        truth = 1)
 
 

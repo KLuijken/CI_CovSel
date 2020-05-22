@@ -14,17 +14,20 @@ source(file = "./rcode/sim/run_sim.R")
 source(file = "./rcode/sumsim/summarize_simulation.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
-use_datagen_scenarios <- datagen_scenarios()[1:10,]
-
+use_datagen_scenarios <- datagen_scenarios()[1:20,]
+use_analysis_scenarios <- analysis_scenarios()
+use_simulation_scenarios <- 1:nrow(use_datagen_scenarios)
+rep <- 10
 
 # Create filestructure  ----
 #------------------------------------------------------------------------------#
 
 dirpaths  <- lapply(create_dirpaths(use_analysis_scenarios = analysis_scenarios()),
        dir.create)
-filepaths <- lapply(dirpaths,
-                    FUN = function(x) create_filepaths(dirpaths = dirpaths[x],
+filepaths <- lapply(create_dirpaths(use_analysis_scenarios = analysis_scenarios()),
+                    FUN = function(x) create_filepaths(dirpaths = x,
                                                        use_datagen_scenarios = use_datagen_scenarios))
+
 invisible(lapply(unlist(filepaths),
                  FUN= function(x) saveRDS(NULL,file=x)))
 
@@ -32,7 +35,7 @@ invisible(lapply(unlist(filepaths),
 # Run simulation study  ----
 #------------------------------------------------------------------------------#
 # run_sim()
-run_sim(rep = 5,
+run_sim(rep = rep,
         use_datagen_scenarios = use_datagen_scenarios,
         use_analysis_scenarios = use_analysis_scenarios)
 
@@ -42,7 +45,7 @@ run_sim(rep = 5,
 #------------------------------------------------------------------------------#
 # summarize_sim()
 invisible(lapply(analysis_scenarios()[['method']],
-                 FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = select_scenario_numbers(),
+                 FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = use_simulation_scenarios,
                                                           method = analysis_scenarios()[['method']][x],                         
                                                           pcutoff = 0.157,
                                                           estimator = 'MRR',

@@ -68,6 +68,7 @@ perform_one_run <- function(datagen_scenario,
                        bYL1 = datagen_scenario[['bYL1']],
                        bYL2 = datagen_scenario[['bYL2']],
                        bYL3 = datagen_scenario[['bYL3']],
+                       Yint = datagen_scenario[['Yint']],
                        sd_UY = datagen_scenario[['sd_UY']],
                        rhoL = datagen_scenario[['rhoL']],
                        seed = seed)
@@ -84,9 +85,9 @@ perform_one_run <- function(datagen_scenario,
 }
 
 # test, remove this when all works
-perform_one_run(datagen_scenario = datagen_scenarios()[100,],
-                use_analysis_scenarios = analysis_scenarios(),
-                seed = 55)
+# perform_one_run(datagen_scenario = datagen_scenarios()[10,],
+#                 use_analysis_scenarios = analysis_scenarios(),
+#                 seed = 55)
 
 
 # Repeat 'perform_one_run' rep times, for 1 datagen_scenario 
@@ -96,18 +97,19 @@ sim_one_datagen_scenario <- function(datagen_scenario,
                                      seeds){
   scen_num <- as.numeric(datagen_scenario['scen_num'])
   for(i in 1:rep){
-    seed = seeds[(rep * scen_num + i)]
+    seed = seeds[(rep * (scen_num-1) + i)]
     perform_one_run(datagen_scenario = datagen_scenario,
                     use_analysis_scenarios = use_analysis_scenarios,
                     seed = seed)
+  # message("Done with scenario ", scen_num, " and replication ", i)
   }
 }
 
 # test, remove this when all works
-sim_one_datagen_scenario(datagen_scenario = datagen_scenarios()[555,],
-                         use_analysis_scenarios = analysis_scenarios(),
-                         rep = 2,
-                         seeds = get_seeds(rep=2))
+# sim_one_datagen_scenario(datagen_scenario = datagen_scenarios()[5,],
+#                          use_analysis_scenarios = analysis_scenarios(),
+#                          rep = 2,
+#                          seeds = get_seeds(rep=2))
 
 
 # Function to run overall simulations.
@@ -117,7 +119,7 @@ sim_one_datagen_scenario(datagen_scenario = datagen_scenarios()[555,],
 run_sim <- function(rep, 
                     use_datagen_scenarios,
                     use_analysis_scenarios,
-                    seeds){
+                    seeds = get_seeds(rep = rep)){
   invisible(apply(use_datagen_scenarios, 
                   1, 
                   FUN = sim_one_datagen_scenario, 
@@ -127,8 +129,8 @@ run_sim <- function(rep,
 }
 
 # test, remove this when all works
-run_sim(rep = 500, 
-        use_datagen_scenarios = datagen_scenarios()[c(1:10),],
-        use_analysis_scenarios = analysis_scenarios(),
-        seeds = get_seeds(rep = 500))
+# run_sim(rep = 100, 
+#         use_datagen_scenarios = datagen_scenarios()[c(1:10),],
+#         use_analysis_scenarios = analysis_scenarios(),
+#         seeds = get_seeds(rep = 100))
 

@@ -6,3 +6,7 @@ data/raw
 data/summarised
 data/poc
 ToDo.txt
+
+.Rhistory
+*.rds
+*.Rproj
