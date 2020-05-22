@@ -23,7 +23,7 @@ rep <- 10
 #------------------------------------------------------------------------------#
 
 dirpaths  <- lapply(create_dirpaths(use_analysis_scenarios = analysis_scenarios()),
-       dir.create)
+       function(x) dir.create(x,recursive = TRUE))
 filepaths <- lapply(create_dirpaths(use_analysis_scenarios = analysis_scenarios()),
                     FUN = function(x) create_filepaths(dirpaths = x,
                                                        use_datagen_scenarios = use_datagen_scenarios))
