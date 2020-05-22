@@ -11,9 +11,9 @@
 # is created. The table contains #method x #rep = 3 x 5000 = 10000 rows, 
 # For example:
 #Scennum     Seed           Model Method       MRR          MOR   mod.coefs    SE(coefs)                            filepath
-#       1 41038673     Unadjusted   <NA>  1.239323     1.507754          NA         ... ./data/results_raw/FLIC_0.157/S1.rds
-#       1 41038673           Full   FLIC 0.8809378    0.7632651   0.2610278         ... ./data/results_raw/FLIC_0.157/S1.rds
-#       1 41038673 Selected_0.157   FLIC 0.8862254    0.7730111   0.2679882         ... ./data/results_raw/FLIC_0.157/S1.rds
+#       1 41038673     Unadjusted   <NA>  1.239323     1.507754          NA         ... ./data/raw/FLIC_0.157/S1.rds
+#       1 41038673           Full   FLIC 0.8809378    0.7632651   0.2610278         ... ./data/raw/FLIC_0.157/S1.rds
+#       1 41038673 Selected_0.157   FLIC 0.8862254    0.7730111   0.2679882         ... ./data/raw/FLIC_0.157/S1.rds
 
 # Load librairies ----
 #------------------------------------------------------------------------------#
