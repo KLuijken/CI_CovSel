@@ -6,7 +6,6 @@ data/raw
 data/summarised
 data/poc
 ToDo.txt
-data/results_raw
 
 .Rhistory
 *.rds
