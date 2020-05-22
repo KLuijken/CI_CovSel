@@ -101,7 +101,7 @@ sim_one_datagen_scenario <- function(datagen_scenario,
     perform_one_run(datagen_scenario = datagen_scenario,
                     use_analysis_scenarios = use_analysis_scenarios,
                     seed = seed)
-  message("Done with scenario ", scen_num, " and replication ", i)
+  # message("Done with scenario ", scen_num, " and replication ", i)
   }
 }
 
