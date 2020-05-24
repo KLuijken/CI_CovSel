@@ -7,8 +7,10 @@
 
 
 backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE, 
-                        printwork = FALSE, ...) 
-{
+                        printwork = FALSE, analysis_scenario, ...){
+  analysis_scenario <- analysis_scenario
+  data <-  object$data
+  
   istep <- 0
   working <- object
   if (trace) {
