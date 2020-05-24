@@ -60,38 +60,53 @@ analyse_data <- function(analysis_scenario,
                                   analysis_scenario[['method']],
                                   t(marginals_full), t(coefficients_full), NA, NA)
   
-  # # Use backward elimination on full model (either ML or FLIC)
-  # selected <- tryCatch.W.E(backwardf(object = full$M,
-  #                                     sls = analysis_scenario[['pcutoff']],
-  #                                     trace = FALSE,
-  #                                     scope = c(paste0("L",(1:datagen_scenario[['nL']])))))
-  # 
-  # # Obtain warnings about model estimation
-  # selected <- pre_model(inputmodel = selected,
-  #                   datagen_scenario = datagen_scenario,
-  #                   data = data)
-  # 
+  
+   # Use backward elimination on full model (either ML or FLIC)
+   selected <- tryCatch.W.E(backwardf(object = full$M,
+                                       slstay = analysis_scenario[['pcutoff']],
+                                       trace = FALSE,
+                                       scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
+                                      analysis_scenario = analysis_scenario)
+                            )
+   
+
+   # Obtain warnings about model estimation
+   selected <- pre_model(inputmodel = selected,
+                     datagen_scenario = datagen_scenario,
+                     data = data)
+   
   # # Obtain marginal risk ratio and marginal odds ratio
-  # marginals_sel    <- unlist(estimate_marginals(data =data,
-  #                                        int = selected$M_int$coefficients[1], 
-  #                                        modelcoefs = selected$M$coefficients[-1]))
-  # 
-  # # Obtain model coefficients and standard errors
-  # coefficients_sel <- unlist(obtain_coefficients(model = selected$M,
-  #                                         intmodel = selected$M_int, 
-  #                                         datagen_scenario = datagen_scenario))
-  # 
-  # # Store results of selected model
-  # results_sel      <- data.table(scen_num, seed,
-  #                                paste0("Selected_",analysis_scenario[['pcutoff']]),
-  #                                analysis_scenario[['method']],
-  #                                t(marginals_sel),
-  #                                t(coefficients_sel), NA, NA)
+   marginals_sel    <- unlist(estimate_marginals(data =data,
+                                          int = selected$M_int$coefficients[1], 
+                                          modelcoefs = selected$M$coefficients[-1]))
+   
+   # Obtain model coefficients and standard errors
+   coefficients_sel <- unlist(obtain_coefficients(model = selected$M,
+                                           intmodel = selected$M_int, 
+                                           datagen_scenario = datagen_scenario))
+   
+   # Store results of selected model
+   results_sel      <- data.table(scen_num, seed,
+                                  paste0("Selected_",analysis_scenario[['pcutoff']]),
+                                  analysis_scenario[['method']],
+                                  t(marginals_sel),
+                                  t(coefficients_sel), NA, NA)
 
   # Set colnames equal
-  # colnames(results_unadj)  <- 
-  #   colnames(results_full) <- 
-  #   colnames(results_sel)  <- c("Scennum","Seed","Model","Method",
+   colnames(results_unadj)  <- 
+     colnames(results_full) <- 
+     colnames(results_sel)  <- c("Scennum","Seed","Model","Method",
+                              "MRR",
+                              "MOR",
+                              "(Intercept)",
+                              names(data)[-1],
+                              "se(Intercept)",
+                              paste0("se(",names(data),")")[-1],
+                              "freq_Y",
+                              "freq_A")
+
+  # colnames(results_unadj)  <-
+  #   colnames(results_full) <- c("scennum","seed","model","method",
   #                            "MRR",
   #                            "MOR",
   #                            "(Intercept)",
@@ -100,26 +115,15 @@ analyse_data <- function(analysis_scenario,
   #                            paste0("se(",names(data),")")[-1],
   #                            "freq_Y",
   #                            "freq_A")
-
-  colnames(results_unadj)  <-
-    colnames(results_full) <- c("scennum","seed","model","method",
-                             "MRR",
-                             "MOR",
-                             "(Intercept)",
-                             names(data)[-1],
-                             "se(Intercept)",
-                             paste0("se(",names(data),")")[-1],
-                             "freq_Y",
-                             "freq_A")
   
   # Combine results in output matrix
-  #results <- rbind(results_unadj,results_full, results_sel)
-  results <- rbind(results_unadj,results_full)
+  results <- rbind(results_unadj,results_full, results_sel)
+  #results <- rbind(results_unadj,results_full)
   dir <- paste(analysis_scenario[['method']],
                analysis_scenario[['pcutoff']],
                sep="_")
-  file <- paste0("S",unique(results[["scennum"]]))
-  results <- cbind(results, filepath = paste0("./data/raw/",dir,"/",file,".rds"))
+  file <- paste0("S", scen_num)
+  results <- cbind(results, filepath = paste0("./data/raw/",dir,"/", file, ".rds"))
   
   return(results)
 }
