@@ -16,7 +16,7 @@ source("./rcode/analyses/helpers/select_scenarios.R")
 Bias <- function(results, 
                  estimator, # string
                  truth){
-  bias <- c(by(results, results[['model']],
+  bias <- c(by(results, results[['Model']],
              function(x) mean(log(unlist(x[[estimator]])))-log(truth)))
   
   return(bias)
@@ -24,7 +24,7 @@ Bias <- function(results,
 
 EmpSE <- function(results,
                   estimator){
-  empSE <- c(by(results,results[['model']], function(x) 
+  empSE <- c(by(results,results[['Model']], function(x) 
     sqrt(sum((log(unlist(x[[estimator]])) - mean(log(unlist(x[[estimator]]))))^2)/(nrow(x)-1))))
   
   return(empSE)
@@ -32,7 +32,7 @@ EmpSE <- function(results,
 
 EmpVar <- function(results,
                    estimator){
-  empvar <- c(by(results,results[['model']], function(x) 
+  empvar <- c(by(results,results[['Model']], function(x) 
     sum((log(unlist(x[[estimator]])) - mean(log(unlist(x[[estimator]]))))^2)/(nrow(x)-1)))
   
   return(empvar)
@@ -41,7 +41,7 @@ EmpVar <- function(results,
 MSE <- function(results, 
                 estimator, # string
                 truth){
-  mse <- c(by(results, results[['model']],
+  mse <- c(by(results, results[['Model']],
               function(x) mean((log(unlist(x[[estimator]]))-log(truth))^2)))
   
   return(mse)
@@ -63,9 +63,9 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
   empVar <- EmpVar(results = results, estimator = estimator)
   mse <- MSE(results = results, estimator = estimator, truth = truth)
   
-  out <- data.table(unique(results[['scennum']]),names(bias),
-                    paste0(method,"_",pcutoff), cbind(bias,empSE,empVar,mse))
-  colnames(out) <- c("scen_num","model","method",
+  out <- data.table(scen_num, names(bias),
+                    paste0(method,"_",pcutoff), cbind(bias, empSE, empVar, mse))
+  colnames(out) <- c("scen_num", "model", "method",
                      paste0(c("bias_","empSE_","empvar_","MSE_"),estimator))
   
   return(out)
@@ -94,6 +94,7 @@ sum_multiple_scenarios <- function(use_simulation_scenarios,
                                                     estimator = estimator,
                                                     truth = truth)))
   
+  dir.create(file.path(".","data","summarised"), recursive = TRUE)
   saveRDS(output,file = paste0("./data/summarised/",method,"_",pcutoff,".rds"))
 }
 
