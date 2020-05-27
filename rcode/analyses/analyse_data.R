@@ -32,7 +32,7 @@ analyse_data <- function(analysis_scenario,
                                   NA,
                                   t(unadjusted), t(rep(NA, times = (2 * ncol(data)))),
                                   freq_Y = sum(data$Y)/nrow(data),
-                                  freq_A = sum(data$A)/nrow(data))
+                                  freq_A = sum(data$A)/nrow(data), NA, NA)
   
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
   full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
@@ -58,11 +58,13 @@ analyse_data <- function(analysis_scenario,
   # Store results of full model
   results_full      <- data.table(scen_num, seed,"Full",
                                   analysis_scenario[['method']],
-                                  t(marginals_full), t(coefficients_full), NA, NA)
+                                  t(marginals_full), t(coefficients_full), NA, NA,
+                                  ifelse(is.null(full$preM$warning), "NULL", full$preM$warning),
+                                  ifelse(is.null(full$preM_int$warning), "NULL", full$preM_int$warning))
   
   
-   # Use backward elimination on full model (either ML or FLIC)
-   selected <- tryCatch.W.E(backwardf(object = full$M,
+  # Use backward elimination on full model (either ML or FLIC)
+  selected <- tryCatch.W.E(backwardf(object = full$M,
                                        slstay = analysis_scenario[['pcutoff']],
                                        trace = FALSE,
                                        scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
@@ -75,7 +77,7 @@ analyse_data <- function(analysis_scenario,
                      datagen_scenario = datagen_scenario,
                      data = data)
    
-  # # Obtain marginal risk ratio and marginal odds ratio
+   # Obtain marginal risk ratio and marginal odds ratio
    marginals_sel    <- unlist(estimate_marginals(data =data,
                                           int = selected$M_int$coefficients[1], 
                                           modelcoefs = selected$M$coefficients[-1]))
@@ -90,9 +92,11 @@ analyse_data <- function(analysis_scenario,
                                   paste0("Selected_",analysis_scenario[['pcutoff']]),
                                   analysis_scenario[['method']],
                                   t(marginals_sel),
-                                  t(coefficients_sel), NA, NA)
+                                  t(coefficients_sel), NA, NA,
+                                  ifelse(is.null(selected$preM$warning), "NULL", selected$preM$warning),
+                                  ifelse(is.null(selected$preM_int$warning), "NULL", selected$preM_int$warning))
 
-  # Set colnames equal
+   # Set colnames equal
    colnames(results_unadj)  <- 
      colnames(results_full) <- 
      colnames(results_sel)  <- c("Scennum","Seed","Model","Method",
@@ -103,22 +107,12 @@ analyse_data <- function(analysis_scenario,
                               "se(Intercept)",
                               paste0("se(",names(data),")")[-1],
                               "freq_Y",
-                              "freq_A")
-
-  # colnames(results_unadj)  <-
-  #   colnames(results_full) <- c("scennum","seed","model","method",
-  #                            "MRR",
-  #                            "MOR",
-  #                            "(Intercept)",
-  #                            names(data)[-1],
-  #                            "se(Intercept)",
-  #                            paste0("se(",names(data),")")[-1],
-  #                            "freq_Y",
-  #                            "freq_A")
+                              "freq_A",
+                              "Model warning",
+                              "Intercept model warning")
   
   # Combine results in output matrix
   results <- rbind(results_unadj,results_full, results_sel)
-  #results <- rbind(results_unadj,results_full)
   dir <- paste(analysis_scenario[['method']],
                analysis_scenario[['pcutoff']],
                sep="_")
