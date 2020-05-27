@@ -71,14 +71,6 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
   return(out)
 }
 
-# test, remove this when all works
-# sum_one_scenario(scen_num = 481,
-#                  method = "ML",
-#                  pcutoff = 0.157,
-#                  estimator = 'MRR',
-#                  truth = 1)
-
-
 
 # Workhorse to summarize results from multiple scenarios. Output stored as data.table
 # in .rds file in ./data/summarised
@@ -97,13 +89,4 @@ sum_multiple_scenarios <- function(use_simulation_scenarios,
   dir.create(file.path(".","data","summarised"), recursive = TRUE)
   saveRDS(output,file = paste0("./data/summarised/",method,"_",pcutoff,".rds"))
 }
-
-# test, remove this when all works
-
-# sum_multiple_scenarios(select_scenario_numbers()[c(1:10)],
-#                        method = "ML",
-#                        pcutoff = 0.157,
-#                        estimator = 'MRR',
-#                        truth = 1)
-
 
