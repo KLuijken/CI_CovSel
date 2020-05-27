@@ -46,14 +46,14 @@ analyse_data <- function(analysis_scenario,
                     data = data)
 
   # Obtain marginal risk ratio and marginal odds ratio
-  marginals_full    <- unlist(estimate_marginals(data =data,
+  marginals_full    <- estimate_marginals(data =data,
                                           int = full$M_int$coefficients[1],
-                                          modelcoefs = full$M$coefficients[-1]))
+                                          modelcoefs = full$M$coefficients[-1])
   
   # Obtain model coefficients and standard errors
-  coefficients_full <- unlist(obtain_coefficients(model = full$M,
+  coefficients_full <- obtain_coefficients(model = full$M,
                                            intmodel = full$M_int,
-                                           datagen_scenario = datagen_scenario))
+                                           datagen_scenario = datagen_scenario)
   
   # Store results of full model
   results_full      <- data.table(scen_num, seed,"Full",
@@ -78,14 +78,14 @@ analyse_data <- function(analysis_scenario,
                      data = data)
    
    # Obtain marginal risk ratio and marginal odds ratio
-   marginals_sel    <- unlist(estimate_marginals(data =data,
+   marginals_sel    <- estimate_marginals(data =data,
                                           int = selected$M_int$coefficients[1], 
-                                          modelcoefs = selected$M$coefficients[-1]))
+                                          modelcoefs = selected$M$coefficients[-1])
    
    # Obtain model coefficients and standard errors
-   coefficients_sel <- unlist(obtain_coefficients(model = selected$M,
+   coefficients_sel <- obtain_coefficients(model = selected$M,
                                            intmodel = selected$M_int, 
-                                           datagen_scenario = datagen_scenario))
+                                           datagen_scenario = datagen_scenario)
    
    # Store results of selected model
    results_sel      <- data.table(scen_num, seed,
