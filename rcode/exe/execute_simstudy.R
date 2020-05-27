@@ -12,6 +12,7 @@ source(file = "./rcode/packages/packages.R")
 source(file = "./rcode/dgm/create_dirs.R")
 source(file = "./rcode/sim/run_sim.R")
 source(file = "./rcode/sumsim/summarize_simulation.R")
+source(file = "./rcode/sumsim/diagnostics.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
 use_datagen_scenarios <- datagen_scenarios()[1:20,]
@@ -46,7 +47,12 @@ run_sim(rep = rep,
 # summarize_sim()
 invisible(lapply(analysis_scenarios()[['method']],
                  FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = use_simulation_scenarios,
-                                                          method = x,                         
+                                                          method = analysis_scenarios()[['method']][x],                         
                                                           pcutoff = 0.157,
                                                           estimator = 'MRR',
                                                           truth = 1)))
+
+# Diagnostic checks  ----
+#------------------------------------------------------------------------------#
+# frequency exposure outcome
+diagn_freqs()

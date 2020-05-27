@@ -5,6 +5,7 @@ results/tables/
 data/raw
 data/summarised
 data/poc
+data/diagnostics
 ToDo.txt
 
 .Rhistory
