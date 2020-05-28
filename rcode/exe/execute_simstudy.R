@@ -56,3 +56,6 @@ invisible(lapply(analysis_scenarios()[['method']],
 #------------------------------------------------------------------------------#
 # frequency exposure outcome
 diagn_freqs()
+
+# warnings in model fitting
+diagn_warnings()
