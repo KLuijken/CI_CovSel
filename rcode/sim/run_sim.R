@@ -72,6 +72,18 @@ perform_one_run <- function(datagen_scenario,
                        sd_UY = datagen_scenario[['sd_UY']],
                        rhoL = datagen_scenario[['rhoL']],
                        seed = seed)
+  
+  # Data descriptives
+  descriptives <- data.table(scen_num = datagen_scenario[['scen_num']],
+                             seed = seed,
+                             freq_A = sum(data$A)/nrow(data),
+                             freq_Y = sum(data$Y)/nrow(data),
+                             filepath = paste0("./data/raw/descriptives/S",
+                                               datagen_scenario[['scen_num']], ".rds"))
+  
+  # save descriptives
+  save_results(results=descriptives)
+  
   # Analyse the data using use_analysis_scenarios
   results <- apply(use_analysis_scenarios, 
                    1, 
@@ -79,7 +91,7 @@ perform_one_run <- function(datagen_scenario,
                    datagen_scenario = datagen_scenario, 
                    data = data,
                    seed = seed)
-  # save results
+  # save analysis results
   lapply(results,
          FUN = save_results)
 }

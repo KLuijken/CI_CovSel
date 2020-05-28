@@ -55,7 +55,7 @@ invisible(lapply(analysis_scenarios()[['method']],
 # Diagnostic checks  ----
 #------------------------------------------------------------------------------#
 # frequency exposure outcome
-diagn_freqs()
+diagn_freqs(use_datagen_scenarios)
 
 # warnings in model fitting
 diagn_warnings()

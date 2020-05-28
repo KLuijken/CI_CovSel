@@ -31,8 +31,7 @@ analyse_data <- function(analysis_scenario,
   results_unadj      <- data.table(scen_num, seed,"Unadjusted",
                                   NA,
                                   t(unadjusted), t(rep(NA, times = (2 * ncol(data)))),
-                                  freq_Y = sum(data$Y)/nrow(data),
-                                  freq_A = sum(data$A)/nrow(data), NA, NA)
+                                  NA, NA)
   
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
   full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
@@ -58,7 +57,7 @@ analyse_data <- function(analysis_scenario,
   # Store results of full model
   results_full      <- data.table(scen_num, seed,"Full",
                                   analysis_scenario[['method']],
-                                  t(marginals_full), t(coefficients_full), NA, NA,
+                                  t(marginals_full), t(coefficients_full),
                                   ifelse(is.null(full$preM$warning), "NULL", full$preM$warning),
                                   ifelse(is.null(full$preM_int$warning), "NULL", full$preM_int$warning))
   
@@ -92,7 +91,7 @@ analyse_data <- function(analysis_scenario,
                                   paste0("Selected_",analysis_scenario[['pcutoff']]),
                                   analysis_scenario[['method']],
                                   t(marginals_sel),
-                                  t(coefficients_sel), NA, NA,
+                                  t(coefficients_sel),
                                   ifelse(is.null(selected$preM$warning), "NULL", selected$preM$warning),
                                   ifelse(is.null(selected$preM_int$warning), "NULL", selected$preM_int$warning))
 
@@ -106,8 +105,6 @@ analyse_data <- function(analysis_scenario,
                               names(data)[-1],
                               "se(Intercept)",
                               paste0("se(",names(data),")")[-1],
-                              "freq_Y",
-                              "freq_A",
                               "Model warning",
                               "Intercept model warning")
   

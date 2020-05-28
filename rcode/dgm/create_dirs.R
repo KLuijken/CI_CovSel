@@ -14,9 +14,9 @@
 # Function to create a separate directory per method
 
 create_dirpaths <- function(use_analysis_scenarios){
-  levels <- paste(unique(use_analysis_scenarios[['method']]),
+  levels <- c(paste(unique(use_analysis_scenarios[['method']]),
                   unique(use_analysis_scenarios[['pcutoff']]),
-                  sep="_")
+                  sep="_"),"descriptives")
   dirpaths <- paste0("./data/raw/",levels)
   return(dirpaths)
 }
