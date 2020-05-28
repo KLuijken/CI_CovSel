@@ -8,12 +8,12 @@
 # Some notes on the format of the raw data output
 #------------------------------------------------------------------------------#
 # For each scenario from datagen_scenarios(), a .rds file with table of output 
-# is created. The table contains #method x #rep = 3 x 5000 = 10000 rows, 
+# is created. The table contains #method x #rep = 3 x 5000 = 15000 rows, 
 # For example:
-#Scennum     Seed           Model Method       MRR          MOR   mod.coefs    SE(coefs)                            filepath
-#       1 41038673     Unadjusted   <NA>  1.239323     1.507754          NA         ... ./data/raw/FLIC_0.157/S1.rds
-#       1 41038673           Full   FLIC 0.8809378    0.7632651   0.2610278         ... ./data/raw/FLIC_0.157/S1.rds
-#       1 41038673 Selected_0.157   FLIC 0.8862254    0.7730111   0.2679882         ... ./data/raw/FLIC_0.157/S1.rds
+#scen_num     seed           model method      MRR          MOR   mod_warning intmod_warning mod_coefs    SE(coefs)                     filepath
+#       1 41038673     unadjusted   FLIC  1.239323     1.507754            NA             NA        NA          ... ./data/raw/FLIC_0.157/S1.rds
+#       1 41038673           full   FLIC 0.8809378    0.7632651            NA             NA        0.2610278   ... ./data/raw/FLIC_0.157/S1.rds
+#       1 41038673 selected_0.157   FLIC 0.8862254    0.7730111            NA             NA        0.2679882   ... ./data/raw/FLIC_0.157/S1.rds
 
 # Load librairies ----
 #------------------------------------------------------------------------------#
@@ -96,12 +96,6 @@ perform_one_run <- function(datagen_scenario,
          FUN = save_results)
 }
 
-# test, remove this when all works
-# perform_one_run(datagen_scenario = datagen_scenarios()[10,],
-#                 use_analysis_scenarios = analysis_scenarios(),
-#                 seed = 55)
-
-
 # Repeat 'perform_one_run' rep times, for 1 datagen_scenario 
 sim_one_datagen_scenario <- function(datagen_scenario,
                                      use_analysis_scenarios,
@@ -116,13 +110,6 @@ sim_one_datagen_scenario <- function(datagen_scenario,
   # message("Done with scenario ", scen_num, " and replication ", i)
   }
 }
-
-# test, remove this when all works
-# sim_one_datagen_scenario(datagen_scenario = datagen_scenarios()[5,],
-#                          use_analysis_scenarios = analysis_scenarios(),
-#                          rep = 2,
-#                          seeds = get_seeds(rep=2))
-
 
 # Function to run overall simulations.
 # For each of the datagen_scenarios(), rep  data sets will be generated and 
@@ -139,10 +126,4 @@ run_sim <- function(rep,
                   rep = rep,
                   seeds = seeds))
 }
-
-# test, remove this when all works
-# run_sim(rep = 100, 
-#         use_datagen_scenarios = datagen_scenarios()[c(1:10),],
-#         use_analysis_scenarios = analysis_scenarios(),
-#         seeds = get_seeds(rep = 100))
 

@@ -22,16 +22,16 @@ analyse_data <- function(analysis_scenario,
                          datagen_scenario,
                          data,
                          seed){
-  scen_num <- datagen_scenario[['scen_num']]
-  
   # Unadjusted analysis
   unadjusted <- analyse_unadjusted(data=data)
   
   # Store results of unadjusted
-  results_unadj      <- data.table(scen_num, seed,"Unadjusted",
-                                   analysis_scenario[['method']],
-                                  t(unadjusted), t(rep(NA, times = (2 * ncol(data)))),
-                                  NA,NA)
+  results_unadj      <- data.table(scen_num = datagen_scenario[['scen_num']], 
+                                   seed = seed, 
+                                   model = "unadjusted",
+                                   method = analysis_scenario[['method']],
+                                   t(unadjusted),
+                                   mod_warning = NA, intmod_warning = NA)
   
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
   full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
@@ -59,7 +59,9 @@ analyse_data <- function(analysis_scenario,
                                        preintmodel = full$preM_int)
   
   # Store results of full model
-  results_full      <- data.table(scen_num, seed,"Full",
+  results_full      <- data.table(datagen_scenario[['scen_num']],
+                                  seed,
+                                  "full",
                                   analysis_scenario[['method']],
                                   t(marginals_full),
                                   t(coefficients_full),
@@ -94,17 +96,17 @@ analyse_data <- function(analysis_scenario,
                                        preintmodel = selected$preM_int)
    
    # Store results of selected model
-   results_sel      <- data.table(scen_num, seed,
-                                  paste0("Selected_",analysis_scenario[['pcutoff']]),
+   results_sel      <- data.table(datagen_scenario[['scen_num']], 
+                                  seed,
+                                  paste0("selected_",analysis_scenario[['pcutoff']]),
                                   analysis_scenario[['method']],
                                   t(marginals_sel),
                                   t(coefficients_sel),
                                   t(warnings_sel))
 
    # Set colnames equal
-   colnames(results_unadj)  <- 
-     colnames(results_full) <- 
-     colnames(results_sel)  <- c("Scennum","Seed","Model","Method",
+   colnames(results_full) <- 
+     colnames(results_sel)  <- c("scen_num","seed","model","method",
                               "MRR",
                               "MOR",
                               "(Intercept)",
@@ -115,11 +117,11 @@ analyse_data <- function(analysis_scenario,
                               "intmod_warning")
   
   # Combine results in output matrix
-  results <- rbind(results_unadj,results_full, results_sel)
+  results <- rbind(results_unadj,results_full, results_sel, fill=T)
   dir <- paste(analysis_scenario[['method']],
                analysis_scenario[['pcutoff']],
                sep="_")
-  file <- paste0("S", scen_num)
+  file <- paste0("S", datagen_scenario[['scen_num']])
   results <- cbind(results, filepath = paste0("./data/raw/",dir,"/", file, ".rds"))
   
   return(results)

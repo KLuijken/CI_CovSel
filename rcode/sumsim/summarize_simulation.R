@@ -16,7 +16,7 @@ source("./rcode/analyses/helpers/select_scenarios.R")
 Bias <- function(results, 
                  estimator, # string
                  truth){
-  bias <- c(by(results, results[['Model']],
+  bias <- c(by(results, results[['model']],
              function(x) mean(log(unlist(x[[estimator]])))-log(truth)))
   
   return(bias)
@@ -24,7 +24,7 @@ Bias <- function(results,
 
 EmpSE <- function(results,
                   estimator){
-  empSE <- c(by(results,results[['Model']], function(x) 
+  empSE <- c(by(results,results[['model']], function(x) 
     sqrt(sum((log(unlist(x[[estimator]])) - mean(log(unlist(x[[estimator]]))))^2)/(nrow(x)-1))))
   
   return(empSE)
@@ -32,7 +32,7 @@ EmpSE <- function(results,
 
 EmpVar <- function(results,
                    estimator){
-  empvar <- c(by(results,results[['Model']], function(x) 
+  empvar <- c(by(results,results[['model']], function(x) 
     sum((log(unlist(x[[estimator]])) - mean(log(unlist(x[[estimator]]))))^2)/(nrow(x)-1)))
   
   return(empvar)
@@ -41,7 +41,7 @@ EmpVar <- function(results,
 MSE <- function(results, 
                 estimator, # string
                 truth){
-  mse <- c(by(results, results[['Model']],
+  mse <- c(by(results, results[['model']],
               function(x) mean((log(unlist(x[[estimator]]))-log(truth))^2)))
   
   return(mse)

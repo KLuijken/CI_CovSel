@@ -48,9 +48,9 @@ diagn_warnings_onemethod <- function(use_datagen_scenarios, method, pcutoff){
                              character(0))){
       write.table(paste0(results$mod_warning[!is.na(results$mod_warning)],
                          " in Scenario ", 
-                         results$Scennum[!is.na(results$mod_warning)],
+                         results$scen_num[!is.na(results$mod_warning)],
                          " Seed ", 
-                         results$Seed[!is.na(results$mod_warning)]),
+                         results$seed[!is.na(results$mod_warning)]),
                   file = "./data/diagnostics/warningsmodel.txt", 
                   append = T,
                   row.names = F,
@@ -61,10 +61,10 @@ diagn_warnings_onemethod <- function(use_datagen_scenarios, method, pcutoff){
                              character(0))){
       write.table(paste0(results$intmod_warning[!is.na(results$intmod_warning)],
                          " in Scenario ", 
-                         results$Scennum[!is.na(results$intmod_warning)],
+                         results$scen_num[!is.na(results$intmod_warning)],
                          " Seed ", 
-                         results$Seed[!is.na(results$intmod_warning)]),
-                  file = "./data/diagnostics/warningsinmodel.txt", 
+                         results$seed[!is.na(results$intmod_warning)]),
+                  file = "./data/diagnostics/warningsintmodel.txt", 
                   append = T, 
                   row.names = F,
                   col.names = F)} 
