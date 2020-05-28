@@ -44,26 +44,26 @@ diagn_warnings_onemethod <- function(use_datagen_scenarios, method, pcutoff){
     results <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",i,".rds"))
     
     # Store model warnings
-    if(!identical(results$`Model warning`[which(results$`Model warning` != "NULL")],
+    if(!identical(results$mod_warning[!is.na(results$mod_warning)],
                              character(0))){
-      write.table(paste0(results$`Model warning`[which(results$`Model warning` != "NULL")],
+      write.table(paste0(results$mod_warning[!is.na(results$mod_warning)],
                          " in Scenario ", 
-                         results$Scennum[which(results$`Model warning` != "NULL")],
+                         results$Scennum[!is.na(results$mod_warning)],
                          " Seed ", 
-                         results$Seed[which(results$`Model warning` != "NULL")]),
+                         results$Seed[!is.na(results$mod_warning)]),
                   file = "./data/diagnostics/warningsmodel.txt", 
                   append = T,
                   row.names = F,
                   col.names = F)} 
     
     # Store intercept model warnings
-      if(!identical(results$`Intercept model warning`[which(results$`Intercept model warning` != "NULL")],
+      if(!identical(results$intmod_warning[!is.na(results$intmod_warning)],
                              character(0))){
-      write.table(paste0(results$`Intercept model warning`[which(results$`Intercept model warning` != "NULL")],
+      write.table(paste0(results$intmod_warning[!is.na(results$intmod_warning)],
                          " in Scenario ", 
-                         results$Scennum[which(results$`Intercept model warning` != "NULL")],
+                         results$Scennum[!is.na(results$intmod_warning)],
                          " Seed ", 
-                         results$Seed[which(results$`Intercept model warning` != "NULL")]),
+                         results$Seed[!is.na(results$intmod_warning)]),
                   file = "./data/diagnostics/warningsinmodel.txt", 
                   append = T, 
                   row.names = F,

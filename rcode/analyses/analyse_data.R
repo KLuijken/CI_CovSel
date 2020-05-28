@@ -31,7 +31,7 @@ analyse_data <- function(analysis_scenario,
   results_unadj      <- data.table(scen_num, seed,"Unadjusted",
                                    analysis_scenario[['method']],
                                   t(unadjusted), t(rep(NA, times = (2 * ncol(data)))),
-                                  "NULL", "NULL")
+                                  NA,NA)
   
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
   full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
@@ -111,8 +111,8 @@ analyse_data <- function(analysis_scenario,
                               names(data)[-1],
                               "se(Intercept)",
                               paste0("se(",names(data),")")[-1],
-                              "Model warning",
-                              "Intercept model warning")
+                              "mod_warning",
+                              "intmod_warning")
   
   # Combine results in output matrix
   results <- rbind(results_unadj,results_full, results_sel)

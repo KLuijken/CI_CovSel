@@ -21,8 +21,8 @@ pre_model <- function(inputmodel,
 
 # Obtain warnings (convergence, separation)
 obtain_warnings <- function(premodel, preintmodel){
-  warning     <- ifelse(is.null(premodel$warning),"NULL",paste(premodel$warning))
-  warning_int <- ifelse(is.null(preintmodel$warning),"NULL",paste(preintmodel$warning))
+  warning     <- ifelse(is.null(premodel$warning),NA,paste(premodel$warning))
+  warning_int <- ifelse(is.null(preintmodel$warning),NA,paste(preintmodel$warning))
 
   return(list(warning = warning, warning_int = warning_int))
 }
