@@ -19,10 +19,10 @@ pre_model <- function(inputmodel,
 }
 
 
-# Obtain warnings (convergence, separation) [note: not used yet]
-obtain_warnings <- function(premodel, preintmodel, scen, rep){
-  warning     <- ifelse(is.null(premodel$warning),"NULL",{paste0(premodel$warning,"scen=",scen,"nsim=",rep)}) # Store warning, if any, and location in simulation repetitions
-  warning_int <- ifelse(is.null(preintmodel$warning),"NULL",{paste0(preintmodel$warning,"scen=",scen,"nsim=",rep)}) # Store warning, if any
+# Obtain warnings (convergence, separation)
+obtain_warnings <- function(premodel, preintmodel){
+  warning     <- ifelse(is.null(premodel$warning),"NULL",paste(premodel$warning))
+  warning_int <- ifelse(is.null(preintmodel$warning),"NULL",paste(preintmodel$warning))
 
   return(list(warning = warning, warning_int = warning_int))
 }
