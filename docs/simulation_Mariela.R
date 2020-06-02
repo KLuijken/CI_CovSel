@@ -4,7 +4,8 @@
 # Info: Data generation
 #-----------------------------------
 
-
+library(bindata)
+library(mvtnorm)
 ### Determine Correlations
 # x_tmp <- model.matrix(CT~Age+Gender+Smoker+Diabetes.Control+CreaCl+Dialysis+Hypertension+
 #                         Peripheral.Vascular.Disease+Cerebrovascular.Disease+Cerebrovascular.Accident+
