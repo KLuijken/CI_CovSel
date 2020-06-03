@@ -6,10 +6,9 @@
 #------------------------------------------------------------------------------#
 
 
-# Load libraries  ----
+# Helper function ----
 #------------------------------------------------------------------------------#
-
-
+compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
 
 # Initialize simulation scenarios ----
 # Function output: data.frame with 8748 scenarios for the dgm, varying the 
@@ -29,32 +28,29 @@ datagen_scenarios <- function(){
   rhoL  <- c(0,0.3,0.7)
   
   # data.frame with simulation scenarios
-  datagen_scenarios <- expand.grid(nobs,
-                                   nL,
-                                   bAL1,
-                                   bAL2,
-                                   bAL3,
-                                   bYL1,
-                                   bYL2,
-                                   bYL3,
-                                   Yint,
-                                   sd_UY,
-                                   rhoL)
+  datagen_scenarios <- expand.grid(nobs=nobs,
+                                   nL=nL,
+                                   bAL1=bAL1,
+                                   bAL2=bAL2,
+                                   bAL3=bAL3,
+                                   bYL1=bYL1,
+                                   bYL2=bYL2,
+                                   bYL3=bYL3,
+                                   Yint=Yint,
+                                   sd_UY=sd_UY,
+                                   rhoL=rhoL)
+  
+  # Remove redundant scenarios using a counter
+  datagen_scenarios$counter <- apply(datagen_scenarios,
+                                     MARGIN=1,
+                                     FUN = function(x) compute_rowtotal(x))
+  datagen_scenarios         <- datagen_scenarios[!duplicated(
+                                     datagen_scenarios[['counter']]),]
+  datagen_scenarios$counter <- NULL
+  
   # Add scenarios number to keep track of results
   datagen_scenarios$scen_num <- c(1:nrow(datagen_scenarios))
-  colnames(datagen_scenarios) <- c("nobs",
-                                   "nL",
-                                   "bAL1",
-                                   "bAL2",
-                                   "bAL3",
-                                   "bYL1",
-                                   "bYL2",
-                                   "bYL3",
-                                   "Yint",
-                                   "sd_UY",
-                                   "rhoL",
-                                   "scen_num")
-  
+
   return(datagen_scenarios)
 }
 
