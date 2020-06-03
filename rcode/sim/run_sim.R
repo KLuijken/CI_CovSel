@@ -60,14 +60,16 @@ get_seeds <- function(rep){
 perform_one_run <- function(datagen_scenario,
                             use_analysis_scenarios, seed){
   # Generate data
-  data <- gen_data(nobs = datagen_scenario[['nobs']],
+  data <- gen_data(nevents = datagen_scenario[['nevents']],
                        nL = datagen_scenario[['nL']],
+                       bYA = datagen_scenario[['bYA']],
                        bAL1 = datagen_scenario[['bAL1']],
                        bAL2 = datagen_scenario[['bAL2']],
                        bAL3 = datagen_scenario[['bAL3']],
                        bYL1 = datagen_scenario[['bYL1']],
                        bYL2 = datagen_scenario[['bYL2']],
                        bYL3 = datagen_scenario[['bYL3']],
+                       eventrate = datagen_scenario[['eventrate']],
                        Yint = datagen_scenario[['Yint']],
                        sd_UY = datagen_scenario[['sd_UY']],
                        rhoL = datagen_scenario[['rhoL']],

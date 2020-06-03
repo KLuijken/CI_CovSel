@@ -19,19 +19,20 @@ compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
 
 
 datagen_scenarios <- function(){
-  nobs  <- c(120,300)
-  nL    <- 9
-  bAY   <- c(0,0.5)
-  bAL1  <- bAL2  <- bAL3  <- c(0,0.5,1)
-  bYL1  <- bYL2  <- bYL3  <- c(0,0.5,1)
-  Yint  <- 0
-  sd_UY <- c(0.01,1)
-  rhoL  <- c(0,0.3,0.7)
+  nevents   <- 200
+  nL        <- 9
+  bYA       <- c(0,0.5)
+  bAL1      <- bAL2  <- bAL3  <- c(0,0.5,1)
+  bYL1      <- bYL2  <- bYL3  <- c(0,0.5,1)
+  eventrate <- c(0.5, 0.2, 0.03)
+  Yint      <- c(0, -1.65, -3.1)
+  sd_UY     <- c(0.01,1)
+  rhoL      <- c(0,0.3,0.7)
   
   # data.frame with simulation scenarios
-  datagen_scenarios <- expand.grid(nobs=nobs,
+  datagen_scenarios <- expand.grid(nevents=nevents,
                                    nL=nL,
-                                   bAY=bAY,
+                                   bYA=bYA,
                                    bAL1=bAL1,
                                    bAL2=bAL2,
                                    bAL3=bAL3,
@@ -49,6 +50,11 @@ datagen_scenarios <- function(){
   datagen_scenarios         <- datagen_scenarios[!duplicated(
                                      datagen_scenarios[['counter']]),]
   datagen_scenarios$counter <- NULL
+  
+  # Add eventrate based on intercept value
+  for(i in 1:length(Yint)){
+    datagen_scenarios$eventrate[datagen_scenarios$Yint == Yint[i]] <- 
+      eventrate[i]}
   
   # Add scenarios number to keep track of results
   datagen_scenarios$scen_num <- c(1:nrow(datagen_scenarios))

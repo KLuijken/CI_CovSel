@@ -20,21 +20,25 @@
 #------------------------------------------------------------------------------#
 
 # use_datagen_senarios
-gen_data <- function(nobs,
+gen_data <- function(nevents,
                      nL,
-                     bAY,
+                     bYA,
                      bAL1,
                      bAL2,
                      bAL3,
                      bYL1,
                      bYL2,
                      bYL3,
+                     eventrate,
                      Yint,
                      sd_UY,
                      rhoL,
                      seed){
   # Generate data
   set.seed(seed)
+  
+  # Compute nobs from set number of events and varying eventrate
+  nobs         <- nevents * 1/eventrate
   
   # Generate Y, A and L
   UY           <- rnorm(nobs,sd_UY)
@@ -53,7 +57,7 @@ gen_data <- function(nobs,
                                 L[,(2*nL/3+1):nL] * bAL3))
   # Generate outcome:
   Y <- rbinom(nobs, 1,
-                         plogis(Yint + bAY * A + L[,1:(nL/3)] * bYL1 +
+                         plogis(Yint + bYA * A + L[,1:(nL/3)] * bYL1 +
                                 L[,(nL/3+1):(2*nL/3)] * bYL2 + 
                                 L[,(2*nL/3+1):nL] * bYL3 + UY))
   
