@@ -23,6 +23,7 @@
 gen_data <- function(nevents,
                      nL,
                      bYA,
+                     bL_const,
                      bAL1,
                      bAL2,
                      bAL3,
@@ -52,14 +53,23 @@ gen_data <- function(nevents,
   # Make code flexible for number of confounders.
   # Generate exposure:
   A <- rbinom(nobs, 1,
-                         plogis(L[,1:(nL/3)] * bAL1 +
-                                L[,(nL/3+1):(2*nL/3)] * bAL2 + 
-                                L[,(2*nL/3+1):nL] * bAL3))
+                         # half of the covariates are fixed confounders:
+                         plogis(L[,1:(nL/2)] %*% rep(bL_const,times=(nL/2)) + 
+                                # other half of the covariates is a mix of noise/instruments/predictors/confounders
+                                L[,((nL/2)+1):((nL/2)+(nL/6))] %*% rep(bAL1,times=(nL/6)) +
+                                L[,((nL/2)+(nL/6)+1):((nL/2)+(2*nL/6))] %*% rep(bAL2,times=(nL/6)) + 
+                                L[,((nL/2)+(2*nL/6)+1):nL] %*% rep(bAL3,times=(nL/6))))
   # Generate outcome:
   Y <- rbinom(nobs, 1,
-                         plogis(Yint + bYA * A + L[,1:(nL/3)] * bYL1 +
-                                L[,(nL/3+1):(2*nL/3)] * bYL2 + 
-                                L[,(2*nL/3+1):nL] * bYL3 + UY))
+                         plogis(Yint + 
+                                bYA * A + 
+                                # half of the covariates are fixed confounders:
+                                L[,1:(nL/2)] %*% rep(bL_const, times=(nL/2)) +
+                                # other half of the covariates is a mix of noise/instruments/predictors/confounders
+                                L[,((nL/2)+1):((nL/2)+(nL/6))] %*% rep(bYL1,times=(nL/6)) +
+                                L[,((nL/2)+(nL/6)+1):((nL/2)+(2*nL/6))] %*% rep(bYL2,times=(nL/6)) +
+                                L[,((nL/2)+(2*nL/6)+1):nL] %*% rep(bYL3,times=(nL/6)) +
+                                UY))
   
   out_df <- data.frame(Y,A,L)
   colnames(out_df) <- c("Y","A",paste0("L",1:nL))

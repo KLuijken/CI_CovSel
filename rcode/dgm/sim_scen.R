@@ -20,8 +20,9 @@ compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
 
 datagen_scenarios <- function(){
   nevents   <- 200
-  nL        <- 9
+  nL        <- 24
   bYA       <- c(0,0.5)
+  bL_const  <- 0.3
   bAL1      <- bAL2  <- bAL3  <- c(0,0.5,1)
   bYL1      <- bYL2  <- bYL3  <- c(0,0.5,1)
   eventrate <- c(0.5, 0.2, 0.03)
@@ -33,6 +34,7 @@ datagen_scenarios <- function(){
   datagen_scenarios <- expand.grid(nevents=nevents,
                                    nL=nL,
                                    bYA=bYA,
+                                   bL_const=bL_const,
                                    bAL1=bAL1,
                                    bAL2=bAL2,
                                    bAL3=bAL3,
