@@ -21,6 +21,7 @@ compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
 datagen_scenarios <- function(){
   nobs  <- c(120,300)
   nL    <- 9
+  bAY   <- c(0,0.5)
   bAL1  <- bAL2  <- bAL3  <- c(0,0.5,1)
   bYL1  <- bYL2  <- bYL3  <- c(0,0.5,1)
   Yint  <- 0
@@ -30,6 +31,7 @@ datagen_scenarios <- function(){
   # data.frame with simulation scenarios
   datagen_scenarios <- expand.grid(nobs=nobs,
                                    nL=nL,
+                                   bAY=bAY,
                                    bAL1=bAL1,
                                    bAL2=bAL2,
                                    bAL3=bAL3,

@@ -22,6 +22,7 @@
 # use_datagen_senarios
 gen_data <- function(nobs,
                      nL,
+                     bAY,
                      bAL1,
                      bAL2,
                      bAL3,
@@ -52,7 +53,7 @@ gen_data <- function(nobs,
                                 L[,(2*nL/3+1):nL] * bAL3))
   # Generate outcome:
   Y <- rbinom(nobs, 1,
-                         plogis(Yint + L[,1:(nL/3)] * bYL1 +
+                         plogis(Yint + bAY * A + L[,1:(nL/3)] * bYL1 +
                                 L[,(nL/3+1):(2*nL/3)] * bYL2 + 
                                 L[,(2*nL/3+1):nL] * bYL3 + UY))
   
