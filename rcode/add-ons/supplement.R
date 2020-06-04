@@ -224,12 +224,12 @@ plot_samplesize
 dev.off()
 
 
-plot_samplesize <- generate_plot_input(sigmaA = 0.01,
-                                       sigmaL = 0.01,
-                                       sigmaY = 0.01,
-                                       alpha = 0.01,
-                                       beta = 0.01,
-                                       gamma = 0.01,
+plot_samplesize <- generate_plot_input(sigmaA = 0.1,
+                                       sigmaL = 0.1,
+                                       sigmaY = 0.1,
+                                       alpha = 0.1,
+                                       beta = 0.1,
+                                       gamma = 0.1,
                                        n = c(50,100,200, 300, 400, 500),
                     varied_parameter = c(50,100,200, 300, 400, 500),
                     varied_par_name = "Sample size")
