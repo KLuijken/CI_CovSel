@@ -109,4 +109,4 @@ Comparison$Var        <- Var.Full - Var.Omit
 Comparison$Bias2_full <- Bias2.Full
 
 saveRDS(Comparison, 
-        file = "./rcode/poc/CICovSel_POC.rds")
+        file = "./data/poc/CICovSel_POC.rds")
