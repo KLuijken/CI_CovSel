@@ -12,7 +12,7 @@
 compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
 
 # Initialize simulation scenarios ----
-# Function output: data.frame with 8748 scenarios for the dgm, varying the 
+# Function output: data.frame with 630 scenarios for the dgm, varying the 
 # strength of association between covariates and exposure/outcome, residual variance
 # of exposure and outcome, correlation between covariates, sample size and
 # number of covariates.
