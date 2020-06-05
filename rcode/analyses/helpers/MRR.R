@@ -2,10 +2,10 @@
 # Causal inference covariate selection
 # K Luijken
 #
-# Helper function to obtain Marginal Risk Ratio
+# Helper function to obtain Marginal Risk Ratio and Marginal Odds Ratio
 #------------------------------------------------------------------------------#
 
-# Estimate Marginal Risk Ratio from logistic regression models ----
+# Estimate Marginal Ratios from logistic regression models ----
 #------------------------------------------------------------------------------#
 
 estimate_marginals <- function(data, int, modelcoefs){
@@ -27,10 +27,10 @@ estimate_marginals <- function(data, int, modelcoefs){
   return(list(MRR = MRR, MOR = MOR))
 }
 
-# Obtain true Marginal Risk Ratio by numerical integration ----
+# Obtain true Marginal Ratios by numerical integration ----
 #------------------------------------------------------------------------------#
 
-integrate_MRR <- function(nL, bYA, bL_const, bAL1, bAL2, bAL3, bYL1, bYL2, bYL3, Yint, rhoL){
+integrate_marginals <- function(nL, bYA, bL_const, bAL1, bAL2, bAL3, bYL1, bYL2, bYL3, Yint, rhoL){
   var.L1.star <- (nL/2) + (nL/2)*((nL/2)-1)*rhoL
   var.L2.star <- (nL/6) + (nL/6)*((nL/6)-1)*rhoL
   var.L3.star <- (nL/6) + (nL/6)*((nL/6)-1)*rhoL

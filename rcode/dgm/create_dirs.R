@@ -16,7 +16,7 @@
 create_dirpaths <- function(use_analysis_scenarios){
   levels <- c(paste(unique(use_analysis_scenarios[['method']]),
                   unique(use_analysis_scenarios[['pcutoff']]),
-                  sep="_"),"descriptives")
+                  sep="_"),"descriptives","truth")
   dirpaths <- paste0("./data/raw/",levels)
   return(dirpaths)
 }

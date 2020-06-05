@@ -104,6 +104,27 @@ sim_one_datagen_scenario <- function(datagen_scenario,
                                      use_analysis_scenarios,
                                      rep,
                                      seeds){
+  
+  # True marginal ratios dgm (numeric integration)
+  marginals_true <- integrate_marginals(nL = datagen_scenario[['nL']],
+                                        bYA = datagen_scenario[['bYA']],
+                                        bL_const = datagen_scenario[['bL_const']],
+                                        bAL1 = datagen_scenario[['bAL1']],
+                                        bAL2 = datagen_scenario[['bAL2']],
+                                        bAL3 = datagen_scenario[['bAL3']],
+                                        bYL1 = datagen_scenario[['bYL1']],
+                                        bYL2 = datagen_scenario[['bYL2']],
+                                        bYL3 = datagen_scenario[['bYL3']],
+                                        Yint = datagen_scenario[['Yint']],
+                                        rhoL = datagen_scenario[['rhoL']])
+  # save truth
+  truth <- data.table(MRR = marginals_true$MRR,
+                      MOR = marginals_true$MOR,
+                      filepath = paste0("./data/raw/truth/S",
+                                        datagen_scenario[['scen_num']], ".rds"))
+  save_results(results=truth)
+  
+  # Run data analysis
   scen_num <- as.numeric(datagen_scenario['scen_num'])
   for(i in 1:rep){
     seed = seeds[(rep * (scen_num-1) + i)]
