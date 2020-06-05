@@ -38,10 +38,10 @@ integrate_MRR <- function(nL, bYA, bL_const, bAL1, bAL2, bAL3, bYL1, bYL2, bYL3,
   cov.L       <- (nL/2)*(nL/6)*(nL/6)*(nL/6)*rhoL
   sigma       <- matrix(cov.L,ncol=4,nrow=4)
   diag(sigma) <- c(var.L1.star,var.L2.star,var.L3.star,var.L3.star)
-  dx          <- 0.1
+  dx          <- 0.2
   values      <- seq(-4,4,by=dx)
   x           <- expand.grid(values,values,values,values)
-  dL          <- mvrnorm(nrow(x), mu=rep(0, times = 4), Sigma = sigma)
+  dL          <- dmvnorm(x,mean=c(rep(0,times=4)), sigma=sigma)
   
   pY0     		<- plogis((Yint + bL_const*x[,1] + 
                          bYL1*x[,2] + bYL2*x[,3] + 
