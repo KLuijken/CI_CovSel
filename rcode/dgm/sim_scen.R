@@ -8,6 +8,7 @@
 
 # Helper function ----
 #------------------------------------------------------------------------------#
+# Sum values and element-wise products of each row
 compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
 
 # Initialize simulation scenarios ----
