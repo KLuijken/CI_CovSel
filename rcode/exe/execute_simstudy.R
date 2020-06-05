@@ -49,8 +49,7 @@ invisible(lapply(analysis_scenarios()[['method']],
                  FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = use_simulation_scenarios,
                                                           method = analysis_scenarios()[['method']][x],                         
                                                           pcutoff = 0.157,
-                                                          estimator = 'MRR',
-                                                          truth = 1)))
+                                                          estimator = 'MRR')))
 
 # Diagnostic checks  ----
 #------------------------------------------------------------------------------#

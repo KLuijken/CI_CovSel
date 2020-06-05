@@ -15,9 +15,9 @@ source("./rcode/analyses/helpers/select_scenarios.R")
 #------------------------------------------------------------------------------#
 Bias <- function(results, 
                  estimator, # string
-                 truth){
-  bias <- c(by(results, results[['model']],
-             function(x) mean(log(unlist(x[[estimator]])))-log(truth)))
+                 true_value){
+  bias       <- c(by(results, results[['model']],
+             function(x) mean(log(unlist(x[[estimator]])))-log(true_value)))
   
   return(bias)
 }
@@ -39,10 +39,10 @@ EmpVar <- function(results,
 }
 
 MSE <- function(results, 
-                estimator, # string
-                truth){
-  mse <- c(by(results, results[['model']],
-              function(x) mean((log(unlist(x[[estimator]]))-log(truth))^2)))
+                estimator,
+                true_value){
+  mse        <- c(by(results, results[['model']],
+              function(x) mean((log(unlist(x[[estimator]]))-log(true_value))^2)))
   
   return(mse)
 }
@@ -54,20 +54,21 @@ MSE <- function(results,
 
 # Function to summarize a single scenario. 
 sum_one_scenario <- function(scen_num, method, pcutoff,
-                estimator,
-                truth){
-  results <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",scen_num,".rds"))
-
-  bias <- Bias(results = results, estimator = estimator, truth = truth)
+                estimator){
+  results    <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",scen_num,".rds"))
+  truth      <- readRDS(paste0("./data/raw/truth/S",scen_num,".rds"))
+  true_value <- truth[[estimator]]
+  
+  bias <- Bias(results = results, estimator = estimator, true_value = true_value)
   empSE <- EmpSE(results = results, estimator = estimator)
   empVar <- EmpVar(results = results, estimator = estimator)
-  mse <- MSE(results = results, estimator = estimator, truth = truth)
-  
+  mse <- MSE(results = results, estimator = estimator, true_value = true_value)
+
   out <- data.table(scen_num, names(bias),
                     paste0(method,"_",pcutoff), cbind(bias, empSE, empVar, mse))
   colnames(out) <- c("scen_num", "model", "method",
                      paste0(c("bias_","empSE_","empvar_","MSE_"),estimator))
-  
+
   return(out)
 }
 
@@ -77,14 +78,13 @@ sum_one_scenario <- function(scen_num, method, pcutoff,
 sum_multiple_scenarios <- function(use_simulation_scenarios,
                                    method,
                                    pcutoff,
-                                   estimator, truth){
+                                   estimator){
   output <- do.call(rbind, lapply(use_simulation_scenarios,
                                   FUN = function(x) sum_one_scenario(
                                     scen_num = use_simulation_scenarios[x],
                                                     method = method,
                                                     pcutoff = pcutoff,
-                                                    estimator = estimator,
-                                                    truth = truth)))
+                                                    estimator = estimator)))
   
   dir.create(file.path(".","data","summarised"), recursive = TRUE)
   saveRDS(output,file = paste0("./data/summarised/",method,"_",pcutoff,".rds"))
