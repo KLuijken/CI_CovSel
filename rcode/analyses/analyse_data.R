@@ -72,7 +72,8 @@ analyse_data <- function(analysis_scenario,
                                        slstay = analysis_scenario[['pcutoff']],
                                        trace = FALSE,
                                        scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
-                                      analysis_scenario = analysis_scenario)
+                                       analysis_scenario = analysis_scenario,
+                                       pl = F)
                             )
    
 
