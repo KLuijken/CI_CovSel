@@ -3,8 +3,7 @@
 #------------------------------------------------------------------------------#
 library(loopR)
 library(ggplot2)
-Comparison <- readRDS("./data/results_poc/CICovsel_POC.rds")
-test <- readRDS("./data/results_poc/CICovsel_POC.rds")
+Comparison <- readRDS("./data/poc/CICovsel_POC.rds")
 
 # Create figure proof of concept ----
 #------------------------------------------------------------------------------#
