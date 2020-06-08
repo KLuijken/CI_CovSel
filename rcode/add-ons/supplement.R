@@ -17,8 +17,8 @@ provide_expressions <- function(sigmaA, sigmaL, sigmaY, alpha, beta, gamma, n){
   
   # Full model
   bias_full <- beta - beta
-  var_full  <- sigmaY^2/((n-2)*sigmaA^2)
-  mse_full  <- sigmaY^2/(sigmaA^2*(n-2))
+  var_full  <- sigmaY^2/((n-1)*sigmaA^2)
+  mse_full  <- sigmaY^2/(sigmaA^2*(n-1))
   
   # Reduced model
   bias_red  <- (sigmaL^2*alpha*gamma)/(sigmaA^2+sigmaL^2*alpha^2)
@@ -121,9 +121,9 @@ rLA    <- (sigmaL*alpha)/(sqrt(sigmaA^2+sigmaL^2*alpha^2))
 
 # Full model
 bias_full        <- beta - beta
-var_full         <- sigmaY^2/((n-2)*sigmaA^2)
+var_full         <- sigmaY^2/((n-1)*sigmaA^2)
 mse_full_simple  <- bias_full^2 + var_full
-mse_full_expr    <- sigmaY^2/(sigmaA^2*(n-2))
+mse_full_expr    <- sigmaY^2/(sigmaA^2*(n-1))
 
 # Reduced model
 bias_red         <- (sigmaL^2*alpha*gamma)/(sigmaA^2+sigmaL^2*alpha^2)
