@@ -24,6 +24,7 @@ gamma  <- 0.6
 # Full model
 bias_full <- beta - beta
 var_full  <- sigmaY^2/((n-1)*sigmaA^2)
+var_full_alternative <- (n*sigmaY^2)/((n-3)*(n-1)*(sigmaA^2))
 mse_full  <- sigmaY^2/((n-1)*sigmaA^2)
 
 # Reduced model

@@ -10,10 +10,10 @@
 # For each scenario from datagen_scenarios(), a .rds file with table of output 
 # is created. The table contains #method x #rep = 3 x 5000 = 15000 rows, 
 # For example:
-#scen_num     seed           model method      MRR          MOR   mod_warning intmod_warning mod_coefs    SE(coefs)                     filepath
-#       1 41038673     unadjusted   FLIC  1.239323     1.507754            NA             NA        NA          ... ./data/raw/FLIC_0.157/S1.rds
-#       1 41038673           full   FLIC 0.8809378    0.7632651            NA             NA        0.2610278   ... ./data/raw/FLIC_0.157/S1.rds
-#       1 41038673 selected_0.157   FLIC 0.8862254    0.7730111            NA             NA        0.2679882   ... ./data/raw/FLIC_0.157/S1.rds
+#scen_num     seed           model method      MRR          MOR   mod_warning intmod_warning mod_coefs    SE(coefs)                     
+#       1 41038673     unadjusted   FLIC  1.239323     1.507754            NA             NA        NA          ... 
+#       1 41038673           full   FLIC 0.8809378    0.7632651            NA             NA        0.2610278   ... 
+#       1 41038673 selected_0.157   FLIC 0.8862254    0.7730111            NA             NA        0.2679882   ... 
 
 # Load librairies ----
 #------------------------------------------------------------------------------#
@@ -31,7 +31,7 @@ save_results <- function(results){
   
   con <- file(filepath)
   while (isOpen(con)){
-    Sys.sleep(2)
+    Sys.sleep(1)
   }
   open(con)
   results_in_file <- readRDS(filepath)
@@ -95,8 +95,7 @@ perform_one_run <- function(datagen_scenario,
                    data = data,
                    seed = seed)
   # save analysis results
-  lapply(results,
-         FUN = save_results)
+  save_results(results = results)
 }
 
 # Repeat 'perform_one_run' rep times, for 1 datagen_scenario 
@@ -125,7 +124,7 @@ sim_one_datagen_scenario <- function(datagen_scenario,
   save_results(results=truth)
   
   # Run data analysis
-  scen_num <- as.numeric(datagen_scenario['scen_num'])
+  scen_num <- as.numeric(datagen_scenario[['scen_num']])
   for(i in 1:rep){
     seed = seeds[(rep * (scen_num-1) + i)]
     perform_one_run(datagen_scenario = datagen_scenario,
