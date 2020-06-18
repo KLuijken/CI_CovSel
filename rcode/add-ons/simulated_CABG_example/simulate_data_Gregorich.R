@@ -1,11 +1,19 @@
-# ----------------------------------
-# Date: 01/12/2017
+#------------------------------------------------------------------------------#
+# Causal inference covariate selection
 # Mariella Gregorich 
-# Info: Data generation
-#-----------------------------------
+# December 2017
+#
+# Generate data simular to CABG example
+#------------------------------------------------------------------------------#
 
+# Load libraries ----
+#------------------------------------------------------------------------------#
 library(bindata)
 library(mvtnorm)
+
+# Generate data ----
+#------------------------------------------------------------------------------#
+
 ### Determine Correlations
 # x_tmp <- model.matrix(CT~Age+Gender+Smoker+Diabetes.Control+CreaCl+Dialysis+Hypertension+
 #                         Peripheral.Vascular.Disease+Cerebrovascular.Disease+Cerebrovascular.Accident+
