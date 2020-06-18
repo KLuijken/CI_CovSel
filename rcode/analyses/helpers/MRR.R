@@ -37,7 +37,7 @@ integrate_marginals <- function(nL, bYA, bL_const, bAL1, bAL2, bAL3, bYL1, bYL2,
   dx          <- 0.2
   values      <- seq(-4,4,by=dx)
   x           <- expand.grid(values,values,values,values)
-  dL          <- dmvnorm(x,mean=c(rep(0,times=4)), sigma=sigma)
+  dL          <- dmvn(x,mu=c(rep(0,times=4)), sigma=sigma)
   
   pY0     		<- plogis((Yint + bL_const*x[,1] + 
                          bYL1*x[,2] + bYL2*x[,3] + 
