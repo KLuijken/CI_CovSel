@@ -33,22 +33,21 @@ integrate_marginals <- function(nL, bYA, bL_const, bAL1, bAL2, bAL3, bYL1, bYL2,
   var.L4.star <- (nL/6) + (nL/6)*((nL/6)-1)*rhoL
   cov.L       <- (nL/2)*(nL/6)*(nL/6)*(nL/6)*rhoL
   sigma       <- matrix(cov.L,ncol=4,nrow=4)
-  diag(sigma) <- c(var.L1.star,var.L2.star,var.L3.star,var.L3.star)
+  diag(sigma) <- c(var.L1.star,var.L2.star,var.L3.star,var.L4.star)
   dx          <- 0.2
   values      <- seq(-4,4,by=dx)
-  x           <- expand.grid(values,values,values,values)
-  dL          <- dmvnorm(x,mean=c(rep(0,times=4)), sigma=sigma)
+  x           <- as.matrix(expand.grid(values,values,values,values))
+  dL          <- mvnfast::dmvn(x,mu=c(rep(0,times=4)), sigma=sigma)
   
-  pY0     		<- plogis((Yint + bL_const*x[,1] + 
-                         bYL1*x[,2] + bYL2*x[,3] + 
-                         bYL3*x[,4]))*(dL*dx) 
-  pY1     		<- plogis((Yint + bL_const*x[,1] + 
-                         bYL1*x[,2] + bYL2*x[,3] + 
-                         bYL3*x[,4] + 
-                         bYA))*(dL*dx) 
+  pY0     		<- sum(plogis(Yint + bL_const*x[,1] + 
+                            bYL1*x[,2] + bYL2*x[,3] + 
+                            bYL3*x[,4])*dL)/sum(dL)  
+  pY1     		<- sum(plogis(Yint + bL_const*x[,1] + 
+                            bYL1*x[,2] + bYL2*x[,3] + 
+                            bYL3*x[,4] + bYA)*dL)/sum(dL) 
   
-  MRR <- mean(pY1)/mean(pY0)
-  MOR <- (mean(pY1) * (1- mean(pY0)))/((1-mean(pY1)) * mean(pY0))
+  MRR <- pY1/pY0
+  MOR <- (pY1 * (1- pY0))/((1-pY1) * pY0)
   
   
   return(list(MRR=MRR, MOR=MOR))
