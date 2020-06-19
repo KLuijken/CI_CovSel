@@ -27,9 +27,11 @@ gen_data <- function(nevents,
                      bAL1,
                      bAL2,
                      bAL3,
+                     bAL4,
                      bYL1,
                      bYL2,
                      bYL3,
+                     bYL4,
                      eventrate,
                      Yint,
                      sd_UY,
@@ -56,9 +58,10 @@ gen_data <- function(nevents,
                          # half of the covariates are fixed confounders:
                          plogis(L[,1:(nL/2)] %*% rep(bL_const,times=(nL/2)) + 
                                 # other half of the covariates is a mix of noise/instruments/predictors/confounders
-                                L[,((nL/2)+1):((nL/2)+(nL/6))] %*% rep(bAL1,times=(nL/6)) +
-                                L[,((nL/2)+(nL/6)+1):((nL/2)+(2*nL/6))] %*% rep(bAL2,times=(nL/6)) + 
-                                L[,((nL/2)+(2*nL/6)+1):nL] %*% rep(bAL3,times=(nL/6))))
+                                L[,((nL/2)+1):((nL/2)+(nL/8))] %*% rep(bAL1,times=(nL/8)) +
+                                L[,((nL/2)+(nL/8)+1):((nL/2)+(2*nL/8))] %*% rep(bAL2,times=(nL/8)) + 
+                                L[,((nL/2)+(2*nL/8)+1):((nL/2)+(3*nL/8))] %*% rep(bAL3,times=(nL/8)) + 
+                                L[,((nL/2)+(3*nL/8)+1):nL] %*% rep(bAL4,times=(nL/8))))
   # Generate outcome:
   Y <- rbinom(nobs, 1,
                          plogis(Yint + 
@@ -66,9 +69,10 @@ gen_data <- function(nevents,
                                 # half of the covariates are fixed confounders:
                                 L[,1:(nL/2)] %*% rep(bL_const, times=(nL/2)) +
                                 # other half of the covariates is a mix of noise/instruments/predictors/confounders
-                                L[,((nL/2)+1):((nL/2)+(nL/6))] %*% rep(bYL1,times=(nL/6)) +
-                                L[,((nL/2)+(nL/6)+1):((nL/2)+(2*nL/6))] %*% rep(bYL2,times=(nL/6)) +
-                                L[,((nL/2)+(2*nL/6)+1):nL] %*% rep(bYL3,times=(nL/6)) +
+                                L[,((nL/2)+1):((nL/2)+(nL/8))] %*% rep(bYL1,times=(nL/8)) +
+                                L[,((nL/2)+(nL/8)+1):((nL/2)+(2*nL/8))] %*% rep(bYL2,times=(nL/8)) +
+                                L[,((nL/2)+(2*nL/8)+1):((nL/2)+(3*nL/8))] %*% rep(bYL3,times=(nL/8)) +
+                                L[,((nL/2)+(3*nL/8)+1):nL] %*% rep(bYL4,times=(nL/8)) +
                                 UY))
   
   out_df <- data.frame(Y,A,L)

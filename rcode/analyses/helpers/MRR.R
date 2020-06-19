@@ -26,25 +26,26 @@ estimate_marginals <- function(data, int, modelcoefs){
 # Obtain true Marginal Ratios by numerical integration ----
 #------------------------------------------------------------------------------#
 
-integrate_marginals <- function(nL, bYA, bL_const, bYL1, bYL2, bYL3, Yint, rhoL){
+integrate_marginals <- function(nL, bYA, bL_const, bYL1, bYL2, bYL3, bYL4, Yint, rhoL){
   var.L1.star <- (nL/2) + (nL/2)*((nL/2)-1)*rhoL
-  var.L2.star <- (nL/6) + (nL/6)*((nL/6)-1)*rhoL
-  var.L3.star <- (nL/6) + (nL/6)*((nL/6)-1)*rhoL
-  var.L4.star <- (nL/6) + (nL/6)*((nL/6)-1)*rhoL
-  cov.L       <- (nL/2)*(nL/6)*(nL/6)*(nL/6)*rhoL
-  sigma       <- matrix(cov.L,ncol=4,nrow=4)
-  diag(sigma) <- c(var.L1.star,var.L2.star,var.L3.star,var.L4.star)
-  dx          <- 0.2
+  var.L2.star <- (nL/8) + (nL/8)*((nL/8)-1)*rhoL
+  var.L3.star <- (nL/8) + (nL/8)*((nL/8)-1)*rhoL
+  var.L4.star <- (nL/8) + (nL/8)*((nL/8)-1)*rhoL
+  var.L5.star <- (nL/8) + (nL/8)*((nL/8)-1)*rhoL
+  cov.L       <- (nL/2)*(nL/8)*(nL/8)*(nL/8)*(nL/8)*rhoL
+  sigma       <- matrix(cov.L,ncol=5,nrow=5)
+  diag(sigma) <- c(var.L1.star,var.L2.star,var.L3.star,var.L4.star,var.L5.star)
+  dx          <- 0.4
   values      <- seq(-4,4,by=dx)
-  x           <- as.matrix(expand.grid(values,values,values,values))
-  dL          <- mvnfast::dmvn(x,mu=c(rep(0,times=4)), sigma=sigma)
+  x           <- as.matrix(expand.grid(values,values,values,values,values))
+  dL          <- mvnfast::dmvn(x,mu=c(rep(0,times=5)), sigma=sigma)
   
   pY0     		<- sum(plogis(Yint + bL_const*x[,1] + 
                             bYL1*x[,2] + bYL2*x[,3] + 
-                            bYL3*x[,4])*dL)/sum(dL)  
+                            bYL3*x[,4] + bYL4*x[,5])*dL)/sum(dL)  
   pY1     		<- sum(plogis(Yint + bL_const*x[,1] + 
                             bYL1*x[,2] + bYL2*x[,3] + 
-                            bYL3*x[,4] + bYA)*dL)/sum(dL) 
+                            bYL3*x[,4] + bYL4*x[,5] + bYA)*dL)/sum(dL) 
   
   MRR <- pY1/pY0
   MOR <- (pY1 * (1- pY0))/((1-pY1) * pY0)
