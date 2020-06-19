@@ -214,7 +214,7 @@ generate_data <- function(N, betaTr.zero = F, avsu = F){
   
   prob_stroke <- generate_outcome(sim_data, betaTr.zero, avsu)
   stroke = rbinom(N,1,prob_stroke)
-  stroke <- factor(stroke)
+  #stroke <- factor(stroke)
 
   sim_data <- cbind("Postoperative.stroke"=stroke, sim_data)
   sim_data$CT <- CT_tmp
