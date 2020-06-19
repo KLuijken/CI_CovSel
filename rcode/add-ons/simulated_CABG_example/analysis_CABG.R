@@ -60,33 +60,20 @@ backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE,
   return(working)
 }
 
-# Perform analysis ----
+# Generate simulated data ----
 #------------------------------------------------------------------------------#
 
-# Generate data
+set.seed(20200618)
 CABG_data<- generate_data(N = 2266,
               betaTr.zero = FALSE,
               avsu = FALSE)
 
-# Models
-ML_full     <- glm(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
-                     Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
-                     Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
-                     Cerebrovascular.Disease + Myocardial.Infarction + 
-                     Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
-                     Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
-                     Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
-                     Previous.Valve + Previous.Coronary.Artery.Bypass +
-                     Year.CABG,
-                 data = CABG_data,
-                 family = binomial)
+# Conditional OR ----
+#------------------------------------------------------------------------------#
 
-ML_selected <- step(ML_full, 
-                    scope = list(lower = Postoperative.stroke ~ CT),
-                    direction = "backward",
-                    k = 2,
-                    trace = FALSE)
+# --- Full model --- #
 
+# Estimate model
 Firth_full   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
                          Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
                          Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
@@ -97,18 +84,18 @@ Firth_full   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker +
                          Previous.Valve + Previous.Coronary.Artery.Bypass +
                          Year.CABG,
                        data = CABG_data,
-                       firth = TRUE,
-                       pl = TRUE)
+                       firth = TRUE, # set firth = FALSE for maximum likelihood estimation
+                       pl = TRUE)    # compute profile likelihood confidence intervals
 
-# Re-estimate the intercept
-pred_intercept       <- t(Firth_full$coefficients[-1]) %*% 
-                        data.matrix(CABG_data[,!(colnames(CABG_data) %in% "Postoperative.stroke")])
-intercept_Firth_full <- glm(CABG_data$Postoperative.stroke ~ offset(pred_intercept), 
-                            family = binomial) 
+# Obtain coefficient + CI
+cOR_full_Firth_Est <- round( exp( summary( Firth_full)$coefficients["CT"]), digits=2)
+cOR_full_Firth_Low <- round( exp( summary( Firth_full)$ci.lower["CT"]), digits=2)
+cOR_full_Firth_Up  <- round( exp( summary( Firth_full)$ci.upper["CT"]), digits=2)
+paste0(cOR_full_Firth_Est, "(95% CI, ", cOR_full_Firth_Low,"; ", cOR_full_Firth_Up,")")
 
-FLIC_allcoefficients <- c(Intercept_Firth_full$coefficients[1],
-                          Firth_full$coefficients[-1])
+# --- Selected model --- #
 
+# Estimate model
 Firth_selected      <- backwardf(Firth_full,
                                 scope = c("Age", "Gender", "Smoker", 
                                           "Diabetes.Control", "CreaCl", "Dialysis", 
@@ -124,13 +111,64 @@ Firth_selected      <- backwardf(Firth_full,
                                 slstay = 0.157,
                                 trace = FALSE)
 
-# Conditional odds ratio, full model
-cOR_full_ML_Est <- summary(ML_full)$coefficients["CT","Estimate"]
-cOR_full_ML_Low <- summary(ML_full)$coefficients["CT","Estimate"] - 1.96 *
-  summary(ML_full)$coefficients["CT","Std. Error"]
-cOR_full_ML_Up  <- summary(ML_full)$coefficients["CT","Estimate"] + 1.96 *
-  summary(ML_full)$coefficients["CT","Std. Error"]
 
-cOR_full_Firth_Est <- summary(Firth_full, print = F)$coefficients["CT"]
-cOR_full_Firth_Low <- summary(Firth_full, print = F)$ci.lower["CT"]
-cOR_full_Firth_Up  <- summary(Firth_full, print = F)$ci.upper["CT"]
+
+# Marginal OR ----
+#------------------------------------------------------------------------------#
+
+# --- Full model --- #
+
+# Use Firth_full model previous step.
+# Re-estimate the intercept
+pred_intercept       <- Firth_full$linear.predictors
+intercept_Firth_full <- glm(CABG_data$Postoperative.stroke ~ offset(pred_intercept), 
+                            family = binomial)$coefficients[1]
+
+# Obtain predicted potential outcomes
+mod_mat <- model.matrix(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
+                          Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
+                          Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
+                          Cerebrovascular.Disease + Myocardial.Infarction + 
+                          Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
+                          Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
+                          Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
+                          Previous.Valve + Previous.Coronary.Artery.Bypass +
+                          Year.CABG,
+                        data = CABG_data)
+
+mod_mat[,"CT"] <- 0
+PredA0 <- plogis(as.vector(test %*% Firth_full$coefficients + intercept_Firth_full))
+mod_mat[,"CT"] <- 1
+PredA1 <- plogis(as.vector(test %*% Firth_full$coefficients + intercept_Firth_full))
+
+# Estimate Marginal OR
+marginal_OR <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
+
+# Bootstrap confidence interval:
+
+
+# Conditional RR ----
+#------------------------------------------------------------------------------#
+
+# --- Full model --- #
+
+# Estimate model
+Poisson_full   <- glm(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
+                          Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
+                          Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
+                          Cerebrovascular.Disease + Myocardial.Infarction + 
+                          Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
+                          Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
+                          Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
+                          Previous.Valve + Previous.Coronary.Artery.Bypass +
+                          Year.CABG,
+                        data = CABG_data,
+                        family = poisson)
+
+# Obtain coefficient + CI
+cRR_full_Poisson_Est <- round( exp( summary( Poisson_full)$coefficients["CT", "Estimate"]), digits=2)
+cRR_full_Poisson_Low <- round( exp( summary( Poisson_full)$coefficients["CT", "Estimate"] -
+                                      1.96*summary( Poisson_full)$coefficients["CT", "Std. Error"]), digits=2)
+cRR_full_Poisson_Up  <- round( exp( summary( Poisson_full)$coefficients["CT", "Estimate"] +
+                                      1.96*summary( Poisson_full)$coefficients["CT", "Std. Error"]), digits=2)
+paste0(cRR_full_Poisson_Est, "(95% CI, ", cRR_full_Poisson_Low,"; ", cRR_full_Poisson_Up,")")
