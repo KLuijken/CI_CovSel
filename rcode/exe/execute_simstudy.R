@@ -13,6 +13,7 @@ source(file = "./rcode/dgm/create_dirs.R")
 source(file = "./rcode/sim/run_sim.R")
 source(file = "./rcode/sumsim/summarize_simulation.R")
 source(file = "./rcode/sumsim/diagnostics.R")
+source(file = "./rcode/visualisation/simresults_table.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
 use_datagen_scenarios <- datagen_scenarios()[1:20,] # it takes a while to remove duplicate scenarios
@@ -58,3 +59,9 @@ diagn_freqs(use_datagen_scenarios)
 
 # warnings in model fitting
 diagn_warnings()
+
+
+# Generate output tables  ----
+#------------------------------------------------------------------------------#
+generate_overall_table("ML",0.157)
+generate_overall_table("FLIC",0.157)
