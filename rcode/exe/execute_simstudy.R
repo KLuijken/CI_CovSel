@@ -63,5 +63,17 @@ diagn_warnings()
 
 # Generate output tables  ----
 #------------------------------------------------------------------------------#
-generate_overall_table("ML",0.157)
-generate_overall_table("FLIC",0.157)
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) generate_overall_table(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  use_datagen_scenarios = use_datagen_scenarios)))
+
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) generate_stratified_table(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  use_datagen_scenarios = use_datagen_scenarios)))
+
