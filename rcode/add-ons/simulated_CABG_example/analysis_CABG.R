@@ -137,14 +137,64 @@ mod_mat <- model.matrix(Postoperative.stroke ~ CT + Age + Gender + Smoker +
                         data = CABG_data)
 
 mod_mat[,"CT"] <- 0
-PredA0 <- plogis(as.vector(test %*% Firth_full$coefficients + intercept_Firth_full))
+PredA0 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth_full))
 mod_mat[,"CT"] <- 1
-PredA1 <- plogis(as.vector(test %*% Firth_full$coefficients + intercept_Firth_full))
+PredA1 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth_full))
 
 # Estimate Marginal OR
-marginal_OR <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
+MOR_full_Firth_Est <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
 
 # Bootstrap confidence interval:
+b_rep <- 100
+seeds <- sample(1:100000, size = b_rep, replace = FALSE)
+CI_marginal_OR <- matrix(NA, nrow = b_rep, ncol = 1)
+
+for(i in 1:b_rep){
+  # Sample bootstrap data using prespecified seeds
+  set.seed(seeds[i])
+  sampled_rows <- sample(1:nrow(CABG_data), size = nrow(CABG_data), replace = TRUE)
+  bs_sample <- CABG_data[sampled_rows,]
+  
+  # Estimate Firth model in bootstrap sample
+  Firth_full   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
+                            Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
+                            Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
+                            Cerebrovascular.Disease + Myocardial.Infarction + 
+                            Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
+                            Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
+                            Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
+                            Previous.Valve + Previous.Coronary.Artery.Bypass +
+                            Year.CABG,
+                          data = bs_sample,
+                          firth = TRUE, # set firth = FALSE for maximum likelihood estimation
+                          pl = FALSE)   # do not compute profile likelihood confidence intervals
+  
+  
+  # Estimate MOR in bootrap sample
+  mod_mat <- model.matrix(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
+                            Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
+                            Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
+                            Cerebrovascular.Disease + Myocardial.Infarction + 
+                            Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
+                            Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
+                            Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
+                            Previous.Valve + Previous.Coronary.Artery.Bypass +
+                            Year.CABG,
+                          data = bs_sample)
+  
+  mod_mat[,"CT"] <- 0
+  PredA0 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth_full))
+  mod_mat[,"CT"] <- 1
+  PredA1 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth_full))
+  
+  CI_marginal_OR[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
+  
+}
+
+# Obtain MOR + CI
+MOR_full_Firth_Low <- round(quantile(CI_marginal_OR, 0.025), digits = 2)
+MOR_full_Firth_Up  <- round(quantile(CI_marginal_OR, 0.975), digits = 2)
+paste0(round(MOR_full_Firth_Est,digits=2), "(95% CI, ", MOR_full_Firth_Low,"; ", MOR_full_Firth_Up,")")
 
 
 # Conditional RR ----
@@ -172,3 +222,4 @@ cRR_full_Poisson_Low <- round( exp( summary( Poisson_full)$coefficients["CT", "E
 cRR_full_Poisson_Up  <- round( exp( summary( Poisson_full)$coefficients["CT", "Estimate"] +
                                       1.96*summary( Poisson_full)$coefficients["CT", "Std. Error"]), digits=2)
 paste0(cRR_full_Poisson_Est, "(95% CI, ", cRR_full_Poisson_Low,"; ", cRR_full_Poisson_Up,")")
+
