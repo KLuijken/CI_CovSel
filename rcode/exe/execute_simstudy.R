@@ -16,7 +16,7 @@ source(file = "./rcode/sumsim/diagnostics.R")
 source(file = "./rcode/visualisation/simresults_table.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
-use_datagen_scenarios <- datagen_scenarios()[1:20,] # it takes a while to remove duplicate scenarios
+use_datagen_scenarios <- datagen_scenarios()[1:100,] # it takes a while to remove duplicate scenarios
 use_analysis_scenarios <- analysis_scenarios()
 use_simulation_scenarios <- 1:nrow(use_datagen_scenarios)
 rep <- 10
@@ -46,11 +46,13 @@ run_sim(rep = rep,
 # Summarize processed simulation output  ----
 #------------------------------------------------------------------------------#
 # summarize_sim()
-invisible(lapply(analysis_scenarios()[['method']],
-                 FUN = function(x) sum_multiple_scenarios(use_simulation_scenarios = use_simulation_scenarios,
-                                                          method = analysis_scenarios()[['method']][x],                         
-                                                          pcutoff = 0.157,
-                                                          estimator = 'MRR')))
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) sum_multiple_scenarios(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  use_datagen_scenarios = use_datagen_scenarios,
+                  estimator = "MRR")))
 
 # Diagnostic checks  ----
 #------------------------------------------------------------------------------#
@@ -76,4 +78,3 @@ invisible(apply(use_analysis_scenarios,
                   method = x[['method']],
                   pcutoff = x[['pcutoff']],
                   use_datagen_scenarios = use_datagen_scenarios)))
-
