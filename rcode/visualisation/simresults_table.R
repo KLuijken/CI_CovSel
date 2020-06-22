@@ -36,7 +36,7 @@ generate_overall_table <- function(method, pcutoff, use_datagen_scenarios){
                    sd_UY = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "sd_UY"])
   
   # Store scenarios where selection results in lower mse
-  mse_benefit <- results[results[,mse_full]<results[,mse_selected],]
+  mse_benefit <- results[results[,mse_selected]<results[,mse_full],]
   
   # Of the mse_benefit scenarios, how many have instruments in dgm?
   IVs <- mse_benefit[mse_benefit[,bYL1 == 0 & bAL1 != 0 | 
@@ -57,17 +57,17 @@ generate_overall_table <- function(method, pcutoff, use_datagen_scenarios){
                         `At least 3 IVs in dgm` = nrow(IVs),
                         `Similarity MSE(log(MRR)) between full and BE approach for scenarios with IVs`=
                           ifelse(nrow(IVs)!=0, 
-                                 round(IVs[,mse_selected] / IVs[,mse_full], digits = 2),
+                                 mean(round(IVs[,mse_selected] / IVs[,mse_full], digits = 2)),
                                  NA), # Need to think about similarity measure
                         `At least 3 noise vars in dgm` = nrow(noise),
                         `Similarity MSE(log(MRR)) between full and BE approach for scenarios with noise`=
                           ifelse(nrow(noise)!=0, 
-                                 round(noise[,mse_selected] / noise[,mse_full], digits = 2),
+                                 mean(round(noise[,mse_selected] / noise[,mse_full], digits = 2)),
                                  NA), 
                         `No IVs or noise in dgm` = nrow(mse_benefit) -  nrow(IVs) - nrow(noise),
                         `Similarity MSE(log(MRR)) between full and BE approach for other scenarios`=
                           ifelse(nrow(other)!=0, 
-                                 round(other[,mse_selected] / other[,mse_full], digits = 2),
+                                 mean(round(other[,mse_selected] / other[,mse_full], digits = 2)),
                                  NA))
   
   print(xtable(table),
@@ -124,7 +124,7 @@ generate_stratified_table <- function(method, pcutoff, use_datagen_scenarios){
     mse_benefit <- results[results[, sd_UY == stratify[i,sd_UY] &
                                      eventrate == stratify[i,eventrate] &
                                      rhoL == stratify[i,rhoL] &
-                                   mse_full < mse_selected],]
+                                   mse_selected < mse_full],]
     
     # Of the mse_benefit scenarios, how many have instruments in dgm?
     IVs <- mse_benefit[mse_benefit[, sd_UY == stratify[i,sd_UY] &
@@ -152,17 +152,17 @@ generate_stratified_table <- function(method, pcutoff, use_datagen_scenarios){
     table[i,"At least 3 IVs in dgm"] <- nrow(IVs)
     table[i,"Similarity MSE(log(MRR)) between full and BE approach for scenarios with IVs"] <- 
                             ifelse(nrow(IVs)!=0, 
-                                   round(IVs[,mse_selected] / IVs[,mse_full], digits = 2),
+                                   mean(round(IVs[,mse_selected] / IVs[,mse_full], digits = 2)),
                                    NA) # Need to think about similarity measure
     table[i,"At least 3 noise vars in dgm"] <- nrow(noise)
     table[i,"Similarity MSE(log(MRR)) between full and BE approach for scenarios with noise"] <-
                             ifelse(nrow(noise)!=0, 
-                                   round(noise[,mse_selected] / noise[,mse_full], digits = 2),
+                                   mean(round(noise[,mse_selected] / noise[,mse_full], digits = 2)),
                                    NA)
     table[i,"No IVs or noise in dgm"] <- nrow(mse_benefit) -  nrow(IVs) - nrow(noise)
     table[i,"Similarity MSE(log(MRR)) between full and BE approach for other scenarios"] <-
                             ifelse(nrow(other)!=0, 
-                                   round(other[,mse_selected] / other[,mse_full], digits = 2),
+                                   mean(round(other[,mse_selected] / other[,mse_full], digits = 2)),
                                    NA)
   }
 
