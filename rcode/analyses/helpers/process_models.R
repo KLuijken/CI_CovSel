@@ -28,22 +28,28 @@ obtain_warnings <- function(premodel, preintmodel){
 }
   
 # Store model coefficients and number of variables
-obtain_coefficients <- function(model, intmodel,
+obtain_coefficients <- function(warning, model, intmodel,
                                 datagen_scenario = datagen_scenario){
-  int         <- intmodel$coefficients[1]
-  se_int      <- coef(summary(intmodel))[1,2]
-  coef_est    <- coef(model)[c("(Intercept)","A",
-                             paste0("L",seq(1:datagen_scenario[['nL']])))]
-  coef_est[is.na(coef_est)] <- NA
-  coef_est    <- coef_est[-1] 
+  ifelse(all(is.na(warning)),{
+    int         <- intmodel$coefficients[1]
+    se_int      <- coef(summary(intmodel))[1,2]
+    coef_est    <- coef(model)[c("(Intercept)","A",
+                                 paste0("L",seq(1:datagen_scenario[['nL']])))]
+    coef_est[is.na(coef_est)] <- NA
+    coef_est    <- coef_est[-1] 
+    
+    coef_se     <-  rep(NA, times= datagen_scenario[['nL']]+2)
+    names(coef_se) <- c("(Intercept)","A",
+                        paste0("L",seq(1:datagen_scenario[['nL']])))
+    coef_se[c(names(model$coefficients))] <- sqrt(diag(vcov(model, complete=T)))
+    coef_se     <- coef_se[-1]
+    
+    alloutput   <- c(int,coef_est,se_int,coef_se)
+  },
+  {
+    alloutput   <- rep(NA, times= (2*(datagen_scenario[['nL']]+2)))
+  })
   
-  coef_se     <-  rep(NA, times= datagen_scenario[['nL']]+2)
-  names(coef_se) <- c("(Intercept)","A",
-                      paste0("L",seq(1:datagen_scenario[['nL']])))
-  coef_se[c(names(model$coefficients))] <- sqrt(diag(vcov(model, complete=T)))
-  coef_se     <- coef_se[-1]
-
-  alloutput   <- c(int,coef_est,se_int,coef_se)
   
   return(alloutput)
 }

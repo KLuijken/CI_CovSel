@@ -44,19 +44,21 @@ analyse_data <- function(analysis_scenario,
                     datagen_scenario = datagen_scenario,
                     data = data)
 
+  # Obtain warnings model estimation
+  warnings_full     <- obtain_warnings(premodel = full$preM,
+                                       preintmodel = full$preM_int)
+  
   # Obtain marginal risk ratio and marginal odds ratio
-  marginals_full    <- estimate_marginals(data =data,
+  marginals_full    <- estimate_marginals(warning = warnings_full,
+                                          data =data,
                                           int = full$M_int$coefficients[1],
                                           modelcoefs = full$M$coefficients[-1])
   
   # Obtain model coefficients and standard errors
-  coefficients_full <- obtain_coefficients(model = full$M,
+  coefficients_full <- obtain_coefficients(warning = warnings_full,
+                                           model = full$M,
                                            intmodel = full$M_int,
                                            datagen_scenario = datagen_scenario)
-  
-  # Obtain warnings model estimation
-  warnings_full     <- obtain_warnings(premodel = full$preM,
-                                       preintmodel = full$preM_int)
   
   # Store results of full model
   results_full      <- data.table(datagen_scenario[['scen_num']],
@@ -75,26 +77,27 @@ analyse_data <- function(analysis_scenario,
                                        analysis_scenario = analysis_scenario,
                                        pl = F)
                             )
-   
 
    # Re-estimate intercept and store try_catch values and warnings in objects
    selected <- pre_model(inputmodel = selected,
                      datagen_scenario = datagen_scenario,
                      data = data)
    
+   # Obtain warnings model estimation
+   warnings_sel     <- obtain_warnings(premodel = selected$preM,
+                                       preintmodel = selected$preM_int)
+   
    # Obtain marginal risk ratio and marginal odds ratio
-   marginals_sel    <- estimate_marginals(data =data,
+   marginals_sel    <- estimate_marginals(warning = warnings_sel,
+                                          data =data,
                                           int = selected$M_int$coefficients[1], 
                                           modelcoefs = selected$M$coefficients[-1])
    
    # Obtain model coefficients and standard errors
-   coefficients_sel <- obtain_coefficients(model = selected$M,
+   coefficients_sel <- obtain_coefficients(warning = warnings_sel,
+                                           model = selected$M,
                                            intmodel = selected$M_int, 
                                            datagen_scenario = datagen_scenario)
-   
-   # Obtain warnings model estimation
-   warnings_sel     <- obtain_warnings(premodel = selected$preM,
-                                       preintmodel = selected$preM_int)
    
    # Store results of selected model
    results_sel      <- data.table(datagen_scenario[['scen_num']], 
