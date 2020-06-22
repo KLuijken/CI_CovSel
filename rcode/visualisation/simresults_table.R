@@ -71,7 +71,8 @@ generate_overall_table <- function(method, pcutoff, use_datagen_scenarios){
                                  NA))
   
   print(xtable(table),
-        file=paste0("./results/tables/",method,"_",pcutoff,"_extensive_sim_overall.txt"))
+        file=paste0("./results/tables/",method,"_",pcutoff,"_extensive_sim_overall.txt"),
+        include.rownames = FALSE)
   
 }
 
@@ -169,6 +170,7 @@ generate_stratified_table <- function(method, pcutoff, use_datagen_scenarios){
   output <- cbind(stratify,table)
   
   print(xtable(output),
-        file=paste0("./results/tables/",method,"_",pcutoff,"_extensive_sim_stratified.txt"))
+        file=paste0("./results/tables/",method,"_",pcutoff,"_extensive_sim_stratified.txt"),
+        include.rownames = FALSE)
   
 }
