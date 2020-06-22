@@ -41,7 +41,7 @@ gen_data <- function(nevents,
   set.seed(seed)
   
   # Compute nobs from set number of events and varying eventrate
-  nobs         <- nevents * 1/eventrate
+  nobs         <- round(nevents * 1/eventrate, digits = 0)
   
   # Generate Y, A and L
   UY           <- rnorm(nobs,sd_UY)
