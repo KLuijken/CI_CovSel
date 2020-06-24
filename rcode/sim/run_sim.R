@@ -107,16 +107,17 @@ sim_one_datagen_scenario <- function(datagen_scenario,
                                      rep,
                                      seeds){
   
-  # True marginal ratios dgm (numeric integration)
-  marginals_true <- integrate_marginals(nL = datagen_scenario[['nL']],
-                                        bYA = datagen_scenario[['bYA']],
-                                        bL_const = datagen_scenario[['bL_const']],
-                                        bYL1 = datagen_scenario[['bYL1']],
-                                        bYL2 = datagen_scenario[['bYL2']],
-                                        bYL3 = datagen_scenario[['bYL3']],
-                                        bYL4 = datagen_scenario[['bYL4']],
-                                        Yint = datagen_scenario[['Yint']],
-                                        rhoL = datagen_scenario[['rhoL']])
+  # True marginal ratios dgm (large sample approximation)
+  marginals_true <- largesample_marginals(nL = datagen_scenario[['nL']],
+                                          bYA = datagen_scenario[['bYA']],
+                                          bL_const = datagen_scenario[['bL_const']],
+                                          bYL1 = datagen_scenario[['bYL1']],
+                                          bYL2 = datagen_scenario[['bYL2']],
+                                          bYL3 = datagen_scenario[['bYL3']],
+                                          bYL4 = datagen_scenario[['bYL4']],
+                                          Yint = datagen_scenario[['Yint']],
+                                          rhoL = datagen_scenario[['rhoL']])
+  
   # save truth
   truth <- data.table(MRR = marginals_true$MRR,
                       MOR = marginals_true$MOR,
