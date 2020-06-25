@@ -52,27 +52,26 @@ gen_data <- function(nevents,
   diag(sigL)   <- 1
   L <- mvrnorm(nobs, mu=rep(0, times = nL), Sigma = sigL)
   
-  # Make code flexible for number of confounders.
+  # Store covariate effects
+  betasAL <- c(rep(bL_const, times=(nL/2)), # half of covariates are fixed confounders
+               rep(bAL1,times=(nL/8)),      # other half varies across scenarios
+               rep(bAL2,times=(nL/8)),      # (predictor/noise/instrument/confounder)
+               rep(bAL3,times=(nL/8)),
+               rep(bAL4,times=(nL/8)))
+  
+  betasYL <- c(rep(bL_const, times=(nL/2)), # half of covariates are fixed confounders
+               rep(bYL1,times=(nL/8)),      # other half varies across scenarios
+               rep(bYL2,times=(nL/8)),      # (predictor/noise/instrument/confounder)
+               rep(bYL3,times=(nL/8)),
+               rep(bYL4,times=(nL/8)))
+  
   # Generate exposure:
-  A <- rbinom(nobs, 1,
-                         # half of the covariates are fixed confounders:
-                         plogis(L[,1:(nL/2)] %*% rep(bL_const,times=(nL/2)) + 
-                                # other half of the covariates is a mix of noise/instruments/predictors/confounders
-                                L[,((nL/2)+1):((nL/2)+(nL/8))] %*% rep(bAL1,times=(nL/8)) +
-                                L[,((nL/2)+(nL/8)+1):((nL/2)+(2*nL/8))] %*% rep(bAL2,times=(nL/8)) + 
-                                L[,((nL/2)+(2*nL/8)+1):((nL/2)+(3*nL/8))] %*% rep(bAL3,times=(nL/8)) + 
-                                L[,((nL/2)+(3*nL/8)+1):nL] %*% rep(bAL4,times=(nL/8))))
+  A <- rbinom(nobs, 1, plogis(L %*% betasAL))
+  
   # Generate outcome:
-  Y <- rbinom(nobs, 1,
-                         plogis(Yint + 
-                                bYA * A + 
-                                # half of the covariates are fixed confounders:
-                                L[,1:(nL/2)] %*% rep(bL_const, times=(nL/2)) +
-                                # other half of the covariates is a mix of noise/instruments/predictors/confounders
-                                L[,((nL/2)+1):((nL/2)+(nL/8))] %*% rep(bYL1,times=(nL/8)) +
-                                L[,((nL/2)+(nL/8)+1):((nL/2)+(2*nL/8))] %*% rep(bYL2,times=(nL/8)) +
-                                L[,((nL/2)+(2*nL/8)+1):((nL/2)+(3*nL/8))] %*% rep(bYL3,times=(nL/8)) +
-                                L[,((nL/2)+(3*nL/8)+1):nL] %*% rep(bYL4,times=(nL/8)) +
+  Y <- rbinom(nobs, 1, plogis(Yint + 
+                                A * bYA + 
+                                L %*% betasYL +
                                 UY))
   
   out_df <- data.frame(Y,A,L)

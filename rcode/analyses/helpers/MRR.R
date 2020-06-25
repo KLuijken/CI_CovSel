@@ -41,26 +41,20 @@ largesample_marginals <- function(nL, bYA, bL_const, bYL1, bYL2, bYL3, bYL4, Yin
   diag(sigL)   <- 1
   L <- mvrnorm(N, mu=rep(0, times = nL), Sigma = sigL)
   
-  # Make code flexible for number of confounders.
+  # Store covariate effects
+  betasYL <- c(rep(bL_const, times=(nL/2)), # half of covariates are fixed confounders
+               rep(bYL1,times=(nL/8)),      # other half varies across scenarios
+               rep(bYL2,times=(nL/8)),      # (predictor/noise/instrument/confounder)
+               rep(bYL3,times=(nL/8)),
+               rep(bYL4,times=(nL/8)))
+  
   # Generate outcome:
-  Y0 <- plogis(Yint + 
-                # half of the covariates are fixed confounders:
-                L[,1:(nL/2)] %*% rep(bL_const, times=(nL/2)) +
-                # other half of the covariates is a mix of noise/instruments/predictors/confounders
-                L[,((nL/2)+1):((nL/2)+(nL/8))] %*% rep(bYL1,times=(nL/8)) +
-                L[,((nL/2)+(nL/8)+1):((nL/2)+(2*nL/8))] %*% rep(bYL2,times=(nL/8)) +
-                L[,((nL/2)+(2*nL/8)+1):((nL/2)+(3*nL/8))] %*% rep(bYL3,times=(nL/8)) +
-                L[,((nL/2)+(3*nL/8)+1):nL] %*% rep(bYL4,times=(nL/8)))
+  Y0 <- plogis(Yint +
+                 L %*% betasYL)
   
   Y1 <- plogis(Yint + 
                 bYA + 
-                # half of the covariates are fixed confounders:
-                L[,1:(nL/2)] %*% rep(bL_const, times=(nL/2)) +
-                # other half of the covariates is a mix of noise/instruments/predictors/confounders
-                L[,((nL/2)+1):((nL/2)+(nL/8))] %*% rep(bYL1,times=(nL/8)) +
-                L[,((nL/2)+(nL/8)+1):((nL/2)+(2*nL/8))] %*% rep(bYL2,times=(nL/8)) +
-                L[,((nL/2)+(2*nL/8)+1):((nL/2)+(3*nL/8))] %*% rep(bYL3,times=(nL/8)) +
-                L[,((nL/2)+(3*nL/8)+1):nL] %*% rep(bYL4,times=(nL/8)))
+                L %*% betasYL)
   
   MRR <- mean(Y1)/mean(Y0)
   MOR <- (mean(Y1) * (1- mean(Y0)))/((1-mean(Y1)) * mean(Y0))
