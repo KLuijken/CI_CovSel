@@ -61,11 +61,20 @@ na_count <- function(results,
 #------------------------------------------------------------------------------#
 
 # Function to summarize a single scenario. 
-sum_one_scenario <- function(scen_num, method, pcutoff,
+sum_one_scenario <- function(datagen_scenario, method, pcutoff,
                 estimator){
+  scen_num   <- datagen_scenario[['scen_num']]
+  
+  # load results
   results    <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",scen_num,".rds"))
-  truth      <- readRDS(paste0("./data/raw/truth/S",scen_num,".rds"))
-  true_value <- truth[[estimator]]
+  
+  # store true value
+  ifelse(estimator == "COR",{
+    true_value <- datagen_scenario[['bYA']]
+  },{
+    truth      <- readRDS(paste0("./data/raw/truth/S",scen_num,".rds"))
+    true_value <- truth[[estimator]]
+  })
   
   bias <- Bias(results = results, estimator = estimator, true_value = true_value)
   empSE <- EmpSE(results = results, estimator = estimator)
