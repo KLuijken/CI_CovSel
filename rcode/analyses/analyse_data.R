@@ -23,14 +23,17 @@ analyse_data <- function(analysis_scenario,
                          data,
                          seed){
   # Unadjusted analysis
-  unadjusted <- analyse_unadjusted(data=data)
+  unadjusted <- analyse_unadjusted(data = data,
+                                   method = analysis_scenario[['method']])
   
   # Store results of unadjusted
   results_unadj      <- data.table(scen_num = datagen_scenario[['scen_num']], 
                                    seed = seed, 
                                    model = "unadjusted",
                                    method = analysis_scenario[['method']],
-                                   t(unadjusted),
+                                   MRR = unadjusted[['MRR']],
+                                   MOR = unadjusted[['MOR']],
+                                   A = unadjusted[['COR']],
                                    mod_warning = NA, intmod_warning = NA)
   
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
