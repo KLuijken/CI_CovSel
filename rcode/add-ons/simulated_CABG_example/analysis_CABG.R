@@ -15,61 +15,12 @@
 ## marginal odds ratio of a full model, estimated using predicted potential 
 #     outcomes of a FLIC model and backward elimination
 
-start_time <- Sys.time()
 
 # Load librairies + source code ----
 #------------------------------------------------------------------------------#
 library(logistf)
 
 source(file = "./rcode/add-ons/simulated_CABG_example/simulate_data_Gregorich.R")
-
-# Helper function ----
-#------------------------------------------------------------------------------#
-
-backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE, 
-                       printwork = FALSE, ...){
-  data <-  object$data
-  
-  istep <- 0
-  working <- object
-  if (trace) {
-    cat("Step ", istep, ": starting model\n")
-    if (printwork) {
-      print(working)
-      cat("\n\n")
-    }
-  }
-  if (missing(scope)) 
-    scope <- attr(terms(working), "term.labels")
-  while (istep < steps & working$df >= 2){
-    istep <- istep + 1
-    mat <- drop1(working)
-    inscope <- match(scope, rownames(mat))  
-    inscope <- inscope[!is.na(inscope)]
-    if (all(mat[inscope, 3] < slstay)){      
-      break}
-    removal <- rownames(mat)[mat[, 3] == max(mat[inscope, 
-                                                 3])]
-    newform = as.formula(paste("~.-", removal))
-    if (working$df == 2 | working$df == mat[mat[, 3] == max(mat[, 3]), 2]){
-      working <- update(working, formula = newform, pl = FALSE)}else{ 
-        working <- update(working, formula = newform)}
-    if (trace) {
-      cat("drop1:\n")       
-      print(mat)           
-      cat("\n\n")
-      cat("Step ", istep, ": removed ", removal, 
-          " (P=", max(mat[, 3]), ")\n")
-      if (printwork) {
-        print(working)
-        cat("\n\n")
-      }
-    }
-  }
-  if (trace) 
-    cat("\n")
-  return(working)
-}
 
 # Generate simulated data ----
 #------------------------------------------------------------------------------#
@@ -108,7 +59,7 @@ paste0(cOR_full_Firth_Est,
 #------------------------------------------------------------------------------#
 
 # Estimate model
-Firth_selected      <- backwardf(Firth_full,
+Firth_selected      <- backward(Firth_full,
                                 scope = c("Age", "Gender", "Smoker", 
                                           "Diabetes.Control", "CreaCl", "Dialysis", 
                                           "Hypertension", "Peripheral.Vascular.Disease",
@@ -297,8 +248,6 @@ paste0(round(MOR_selected_Firth_Est,digits=2),
        "(95% CI, ", MOR_selected_Firth_Low,
        "; ", MOR_selected_Firth_Up,")")
 
-end_time <- Sys.time()
-end_time - start_time
 
 # Investigate individual patient risks ----
 #------------------------------------------------------------------------------#
