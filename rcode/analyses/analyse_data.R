@@ -22,20 +22,40 @@ analyse_data <- function(analysis_scenario,
                          datagen_scenario,
                          data,
                          seed){
-  # Unadjusted analysis
-  unadjusted <- analyse_unadjusted(data = data,
-                                   method = analysis_scenario[['method']])
+  # Unadjusted model ----
+  # Estimate unadjusted model using maximum likelihood or FLIC, based on analysis scenario
+  unadjusted <- logistf(Y~A,
+                         data = data,
+                         firth = isTRUE(analysis_scenario[['method']] == "FLIC"),
+                         pl = F)
+  
+  # Re-estimate intercept
+  unadjusted_int  <- glm(data$Y ~ 
+                           offset(as.matrix(data$Y, data$A) %*% coef(unadjusted)[-1]),
+                         family = binomial)
+  
+  # Obtain marginal risk ratio and marginal odds ratio
+  marginals_unadj <- estimate_marginals(warning = NULL,
+                                          data = data,
+                                          int = unadjusted_int$coefficients[1],
+                                          modelcoefs = unadjusted$coefficients[-1])
+  
+  # Obtain model coefficients and standard errors
+  coefficients_unadj <- obtain_coefficients(warning = NULL,
+                                           model = unadjusted,
+                                           intmodel = unadjusted_int,
+                                           datagen_scenario = datagen_scenario)
   
   # Store results of unadjusted
-  results_unadj      <- data.table(scen_num = datagen_scenario[['scen_num']], 
-                                   seed = seed, 
-                                   model = "unadjusted",
-                                   method = analysis_scenario[['method']],
-                                   MRR = unadjusted[['MRR']],
-                                   MOR = unadjusted[['MOR']],
-                                   A = unadjusted[['COR']],
+  results_unadj      <- data.table(datagen_scenario[['scen_num']],
+                                   seed,
+                                   "unadjusted",
+                                   analysis_scenario[['method']],
+                                   t(marginals_unadj),
+                                   t(coefficients_unadj),
                                    mod_warning = NA, intmod_warning = NA)
   
+  # Full model ----
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
   full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
                                data = data,
@@ -72,6 +92,7 @@ analyse_data <- function(analysis_scenario,
                                   t(coefficients_full),
                                   t(warnings_full))
                                   
+  # Selected model ----
   # Use backward elimination on full model (either ML or FLIC)
   selected <- tryCatch.W.E(backwardf(object = full$M,
                                        slstay = analysis_scenario[['pcutoff']],
@@ -112,7 +133,8 @@ analyse_data <- function(analysis_scenario,
                                   t(warnings_sel))
 
    # Set colnames equal
-   colnames(results_full) <- 
+   colnames(results_unadj) <- 
+    colnames(results_full) <- 
      colnames(results_sel)  <- c("scen_num","seed","model","method",
                               "MRR",
                               "MOR",
