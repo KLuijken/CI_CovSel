@@ -1,0 +1,370 @@
+---
+title: "Explainer CICovSel simulations"
+author: "Kim Luijken"
+date: "26-6-2020"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(data.table)
+library(MASS)
+library(logistf)
+library(simsalapar)
+```
+
+## Selection of covariates for confounding adjustment in studies of causal inference
+### The added value of using backward elimination after identifying an initial set of potential confounders based on background knowledge
+
+#### Introduction 
+We examined the value of backward elimination in efficiency of causal effect evaluation in simulation studies. First, we studied a simplified setting in a proof-of-concept simulation. Additionally, we studied the value of backward elimination in efficiency of causal effect evaluation in more complex and realistic settings.  
+The proof of concept simulation can be found in ./rcode/add-ons/poc.R  
+The more elaborate simulations are explained in this file.
+
+
+#### Simulation scenarios
+Based on the CABG example, datasets contain 24 covariates, L. Of these, 12 are fixed confounders, and the other 12 can be predictors/noise/confounders/instruments (which are split up in groups of 3). The number of events could be fixed (for example 200), and the eventrate can vary (and the samplesize accordingly, to 400, 1000, and 6667.  
+  
+Code can be found in ./rcode/dgm/sim_scen.R   
+  
+Questions:
+
+- Does 200 events seem reasonable?
+
+
+```{r sim_scen, echo=TRUE, message=FALSE, warning=FALSE}
+datagen_scenarios <- function(){
+  nevents   <- 200
+  nL        <- 24
+  bYA       <- c(0,0.5)   # on log-scale, MRR of 1 to 1.5
+  bL_const  <- 0.3        # on log-scale
+  bAL1      <- bAL2  <- bAL3  <- bAL4  <- c(0,0.5,1)   # on log-scale
+  bYL1      <- bYL2  <- bYL3  <- bYL4  <- c(0,0.5,1)   # on log-scale
+  eventrate <- c(0.5, 0.2, 0.03)
+  Yint      <- c(0, -1.65, -3.1)
+  sd_UY     <- c(0.01,1)
+  rhoL      <- c(0,0.3,0.7)
+  
+  # data.frame with simulation scenarios
+  datagen_scenarios <- expand.grid(nevents=nevents,
+                                   nL=nL,
+                                   bYA=bYA,
+                                   bL_const=bL_const,
+                                   bAL1=bAL1,
+                                   bAL2=bAL2,
+                                   bAL3=bAL3,
+                                   bAL4=bAL4,
+                                   bYL1=bYL1,
+                                   bYL2=bYL2,
+                                   bYL3=bYL3,
+                                   bYL4=bYL4,
+                                   Yint=Yint,
+                                   sd_UY=sd_UY,
+                                   rhoL=rhoL)
+  
+  # Remove redundant scenarios using a counter
+  datagen_scenarios$counter <- apply(datagen_scenarios,
+                                     MARGIN=1,
+                                     FUN = function(x) compute_rowtotal(x))
+  datagen_scenarios         <- datagen_scenarios[!duplicated(
+                                     datagen_scenarios[['counter']]),]
+  datagen_scenarios$counter <- NULL
+  
+  # Add eventrate based on intercept value
+  for(i in 1:length(Yint)){
+    datagen_scenarios$eventrate[datagen_scenarios$Yint == Yint[i]] <- 
+      eventrate[i]}
+  
+  # Add scenarios number to keep track of results
+  datagen_scenarios$scen_num <- c(1:nrow(datagen_scenarios))
+
+  return(datagen_scenarios)
+}
+
+```
+
+#### Example dataset
+A single dataset can be generated using the following function.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+gen_data <- function(nevents,
+                     nL,
+                     bYA,
+                     bL_const,
+                     bAL1,
+                     bAL2,
+                     bAL3,
+                     bAL4,
+                     bYL1,
+                     bYL2,
+                     bYL3,
+                     bYL4,
+                     eventrate,
+                     Yint,
+                     sd_UY,
+                     rhoL,
+                     seed){
+  # Generate data
+  set.seed(seed)
+  
+  # Compute nobs from set number of events and varying eventrate
+  nobs         <- round(nevents * 1/eventrate, digits = 0)
+  
+  # Generate Y, A and L
+  UY           <- rnorm(nobs,sd_UY)
+  
+  sigL         <- matrix(rhoL, 
+                         nrow = nL,
+                         ncol = nL)
+  diag(sigL)   <- 1
+  L <- mvrnorm(nobs, mu=rep(0, times = nL), Sigma = sigL)
+  
+  # Store covariate effects
+  betasAL <- c(rep(bL_const, times=(nL/2)), # half of covariates are fixed confounders
+               rep(bAL1,times=(nL/8)),      # other half varies across scenarios
+               rep(bAL2,times=(nL/8)),      # (predictor/noise/instrument/confounder)
+               rep(bAL3,times=(nL/8)),
+               rep(bAL4,times=(nL/8)))
+  
+  betasYL <- c(rep(bL_const, times=(nL/2)), # half of covariates are fixed confounders
+               rep(bYL1,times=(nL/8)),      # other half varies across scenarios
+               rep(bYL2,times=(nL/8)),      # (predictor/noise/instrument/confounder)
+               rep(bYL3,times=(nL/8)),
+               rep(bYL4,times=(nL/8)))
+  
+  # Generate exposure:
+  A <- rbinom(nobs, 1, plogis(L %*% betasAL))
+  
+  # Generate outcome:
+  Y <- rbinom(nobs, 1, plogis(Yint + 
+                                A * bYA + 
+                                L %*% betasYL +
+                                UY))
+  
+  out_df <- data.frame(Y,A,L)
+  colnames(out_df) <- c("Y","A",paste0("L",1:nL))
+  
+  return(out_df)
+}
+```
+
+An example dataset would be generated like so:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+#-------------------------------------------------------------------#
+# Info added here in order to generate markdown file
+
+# datagen_scenario <- datagen_scenarios()[50,] 
+datagen_scenario <- data.table(nevents = 200, nL = 24, bYA = 0.5, bL_const = 0.3, bAL1 = 1, bAL2 = 1, bAL3 = 1, bAL4 = 1, bYL1 = 1, bYL2 = 0.5, bYL3 = 0.5, bYL4 = 0.5, Yint = 0, sd_UY = 0.01, rhoL = 0, eventrate = 0.5, scen_num = 50)
+
+seed <- 55 # (random seed)
+#-------------------------------------------------------------------#
+
+
+data <- gen_data(nevents = datagen_scenario[['nevents']],
+                       nL = datagen_scenario[['nL']],
+                       bYA = datagen_scenario[['bYA']],
+                       bL_const = datagen_scenario[['bL_const']],
+                       bAL1 = datagen_scenario[['bAL1']],
+                       bAL2 = datagen_scenario[['bAL2']],
+                       bAL3 = datagen_scenario[['bAL3']],
+                       bAL4 = datagen_scenario[['bAL4']],
+                       bYL1 = datagen_scenario[['bYL1']],
+                       bYL2 = datagen_scenario[['bYL2']],
+                       bYL3 = datagen_scenario[['bYL3']],
+                       bYL4 = datagen_scenario[['bYL4']],
+                       eventrate = datagen_scenario[['eventrate']],
+                       Yint = datagen_scenario[['Yint']],
+                       sd_UY = datagen_scenario[['sd_UY']],
+                       rhoL = datagen_scenario[['rhoL']],
+                       seed = seed)
+
+head(data)
+
+table(data$A)
+
+table(data$Y)
+```
+
+#### Analysis, unadjusted COR and MRR
+To obtain an unadjusted conditional OR and marginal RR, I estimate an ML or FLIC model with only the exposure A and no covariates L included and save the estimates.  
+  
+Code can be found in ./rcode/analyses/analyse_data.R   
+   
+Question: I could also have obtained the MRR as pY1 <- mean(data$Y[data$A==1]) ;  pY0 <- mean(data$Y[data$A==0]);  MRR <- pY1/pY0. What do you think is a better approach?
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#-------------------------------------------------------------------#
+# Info added here in order to generate markdown file
+source("./rcode/analyses/analyse_data.R")
+analysis_scenario <- data.table(method = "FLIC", pcutoff = 0.157) # Other option is method = "ML"
+#-------------------------------------------------------------------#
+
+
+
+unadjusted <- logistf(Y~A,
+                      data = data,
+                      firth = isTRUE(
+                        analysis_scenario[['method']] == "FLIC"),
+                      pl = F)
+  
+  # Re-estimate intercept
+  unadjusted_int  <- glm(data$Y ~ 
+                           offset(as.matrix(data$Y, data$A) %*%
+                                    coef(unadjusted)[-1]),
+                         family = binomial)
+  
+  # Obtain marginal risk ratio and marginal odds ratio
+  marginals_unadj <- estimate_marginals(warning = NULL,
+                                          data = data,
+                                          int = unadjusted_int$coefficients[1],
+                                          modelcoefs = unadjusted$coefficients[-1])
+  
+  # Obtain model coefficients and standard errors
+  coefficients_unadj <- obtain_coefficients(warning = NULL,
+                                           model = unadjusted,
+                                           intmodel = unadjusted_int,
+                                           datagen_scenario = datagen_scenario)
+  
+  # Store results of unadjusted
+  results_unadj      <- data.table(datagen_scenario[['scen_num']],
+                                   seed,
+                                   "unadjusted",
+                                   analysis_scenario[['method']],
+                                   t(marginals_unadj),
+                                   t(coefficients_unadj),
+                                   mod_warning = NA, intmod_warning = NA)
+ 
+ colnames(results_unadj)  <- c("scen_num","seed","model","method",
+                              "MRR",
+                              "MOR",
+                              "(Intercept)",
+                              names(data)[-1],
+                              "se(Intercept)",
+                              paste0("se(",names(data),")")[-1],
+                              "mod_warning",
+                              "intmod_warning") 
+results_unadj
+  
+```
+
+
+#### Analysis, full model
+The code below shows how the conditional OR and marginal RR are obtained from a full model.
+  
+Code can be found in ./rcode/analyses/analyse_data.R 
+
+```{r}
+  # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
+  full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
+                               data = data,
+                               firth = isTRUE(
+                                 analysis_scenario[['method']] == "FLIC"),
+                               pl = F))
+  
+  # Re-estimate intercept and store try_catch values and warnings in objects
+  full <- pre_model(inputmodel = full,
+                    datagen_scenario = datagen_scenario,
+                    data = data)
+
+  # Obtain warnings model estimation
+  warnings_full     <- obtain_warnings(premodel = full$preM,
+                                       preintmodel = full$preM_int)
+  
+  # Obtain marginal risk ratio and marginal odds ratio
+  marginals_full    <- estimate_marginals(warning = warnings_full,
+                                          data =data,
+                                          int = full$M_int$coefficients[1],
+                                          modelcoefs = full$M$coefficients[-1])
+  
+  # Obtain model coefficients and standard errors
+  coefficients_full <- obtain_coefficients(warning = warnings_full,
+                                           model = full$M,
+                                           intmodel = full$M_int,
+                                           datagen_scenario = datagen_scenario)
+  
+  # Store results of full model
+  results_full      <- data.table(datagen_scenario[['scen_num']],
+                                  seed,
+                                  "full",
+                                  analysis_scenario[['method']],
+                                  t(marginals_full),
+                                  t(coefficients_full),
+                                  t(warnings_full))
+  
+   colnames(results_full)  <- c("scen_num","seed","model","method",
+                              "MRR",
+                              "MOR",
+                              "(Intercept)",
+                              names(data)[-1],
+                              "se(Intercept)",
+                              paste0("se(",names(data),")")[-1],
+                              "mod_warning",
+                              "intmod_warning") 
+results_full
+```
+
+The output of the FLIC model looks like this:  
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+full$M
+```
+
+#### Analysis, backward elimination
+The code below shows how the conditional OR and marginal RR are obtained from a full model.
+  
+Code can be found in ./rcode/analyses/analyse_data.R 
+
+```{r}
+# Use backward elimination on full model (either ML or FLIC)
+  selected <- tryCatch.W.E(backwardf(object = full$M,
+                                       slstay = analysis_scenario[['pcutoff']],
+                                       trace = FALSE,
+                                       scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
+                                       analysis_scenario = analysis_scenario,
+                                       pl = F)
+                            )
+
+   # Re-estimate intercept and store try_catch values and warnings in objects
+   selected <- pre_model(inputmodel = selected,
+                     datagen_scenario = datagen_scenario,
+                     data = data)
+   
+   # Obtain warnings model estimation
+   warnings_sel     <- obtain_warnings(premodel = selected$preM,
+                                       preintmodel = selected$preM_int)
+   
+   # Obtain marginal risk ratio and marginal odds ratio
+   marginals_sel    <- estimate_marginals(warning = warnings_sel,
+                                          data =data,
+                                          int = selected$M_int$coefficients[1], 
+                                          modelcoefs = selected$M$coefficients[-1])
+   
+   # Obtain model coefficients and standard errors
+   coefficients_sel <- obtain_coefficients(warning = warnings_sel,
+                                           model = selected$M,
+                                           intmodel = selected$M_int, 
+                                           datagen_scenario = datagen_scenario)
+   
+   # Store results of selected model
+   results_sel      <- data.table(datagen_scenario[['scen_num']], 
+                                  seed,
+                                  paste0("selected_",analysis_scenario[['pcutoff']]),
+                                  analysis_scenario[['method']],
+                                  t(marginals_sel),
+                                  t(coefficients_sel),
+                                  t(warnings_sel))
+
+   # Set colnames equal
+   colnames(results_sel)  <- c("scen_num","seed","model","method",
+                              "MRR",
+                              "MOR",
+                              "(Intercept)",
+                              names(data)[-1],
+                              "se(Intercept)",
+                              paste0("se(",names(data),")")[-1],
+                              "mod_warning",
+                              "intmod_warning")
+
+   results_sel
+```
