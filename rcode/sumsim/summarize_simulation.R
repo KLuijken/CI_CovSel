@@ -99,11 +99,10 @@ sum_multiple_scenarios <- function(method,
                                    estimator){
   output <- do.call(rbind, apply(use_datagen_scenarios,
                                  MARGIN = 1,
-                                 FUN = function(x) sum_one_scenario(
-                                    scen_num = x[['scen_num']],
-                                                    method = method,
-                                                    pcutoff = pcutoff,
-                                                    estimator = estimator)))
+                                 sum_one_scenario,
+                                  method = method,
+                                  pcutoff = pcutoff,
+                                  estimator = estimator))
   
   dir.create(file.path(".","data","summarised"), recursive = TRUE)
   saveRDS(output,file = paste0("./data/summarised/",method,"_",pcutoff,".rds"))
