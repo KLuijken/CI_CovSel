@@ -48,40 +48,12 @@ Firth_full   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker +
                        pl = TRUE)    # compute profile likelihood confidence intervals
 
 # Obtain coefficient + CI
-cOR_full_Firth_Est <- round( exp( summary( Firth_full)$coefficients["CT"]), digits=2)
-cOR_full_Firth_Low <- round( exp( summary( Firth_full)$ci.lower["CT"]), digits=2)
-cOR_full_Firth_Up  <- round( exp( summary( Firth_full)$ci.upper["CT"]), digits=2)
+cOR_full_Firth_Est <- round( exp( coef( Firth_full)["CT"]), digits = 2)
+cOR_full_Firth_Low <- round( exp( confint(Firth_full)[2,1]), digits=2)
+cOR_full_Firth_Up  <- round( exp( confint(Firth_full)[2,2]), digits=2)
 paste0(cOR_full_Firth_Est,
        "(95% CI, ", cOR_full_Firth_Low,
        "; ", cOR_full_Firth_Up,")")
-
-# Conditional OR, FLIC, backward elimination ----
-#------------------------------------------------------------------------------#
-
-# Estimate model
-Firth_selected      <- backward(Firth_full,
-                                scope = c("Age", "Gender", "Smoker", 
-                                          "Diabetes.Control", "CreaCl", "Dialysis", 
-                                          "Hypertension", "Peripheral.Vascular.Disease",
-                                          "Cerebrovascular.Accident", 
-                                          "Cerebrovascular.Disease", "Myocardial.Infarction", 
-                                          "Congestive.Heart.Failure", "Angina.Type", 
-                                          "Afib.flutter", "Number.of.Diseased.Coronary.Vessels",
-                                          "Left.Main.Disease", "Ejection.Fraction",
-                                          "Status", "Dyslipidemia", "Lipid.Lowering",
-                                          "Previous.Valve", "Previous.Coronary.Artery.Bypass",
-                                          "Year.CABG"),
-                                slstay = 0.157,
-                                trace = FALSE)
-
-# Obtain coefficient + CI
-cOR_selected_Firth_Est <- round( exp( summary( Firth_selected)$coefficients["CT"]), digits=2)
-cOR_selected_Firth_Low <- round( exp( summary( Firth_selected)$ci.lower["CT"]), digits=2)
-cOR_selected_Firth_Up  <- round( exp( summary( Firth_selected)$ci.upper["CT"]), digits=2)
-paste0(cOR_selected_Firth_Est,
-       "(95% CI, ", cOR_selected_Firth_Low,
-       "; ", cOR_selected_Firth_Up,")")
-
 
 # Marginal OR, FLIC, full model ----
 #------------------------------------------------------------------------------#
@@ -106,35 +78,57 @@ PredA1 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth
 MOR_full_Firth_Est <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
 
 # Bootstrap confidence interval:
-b_rep <- 100
-seeds <- sample(1:100000, size = b_rep, replace = FALSE)
+b_rep <- 500
+seeds <- 1:b_rep
 CI_marginal_OR <- matrix(NA, nrow = b_rep, ncol = 1)
 
 for(i in 1:b_rep){
   # Sample bootstrap data using prespecified seeds
   set.seed(seeds[i])
-  sampled_rows <- sample(1:nrow(CABG_data), size = nrow(CABG_data), replace = TRUE)
-  bs_sample <- CABG_data[sampled_rows,]
+  # Stratified sampling, events
+  events            <- CABG_data[CABG_data$Postoperative.stroke ==1,]
+  sampled_events    <- sample(1:nrow(events),
+                         size = nrow(events), replace = TRUE)
+  bs_events         <- events[sampled_events,]
+  # Sample non-events
+  nonevents         <- CABG_data[CABG_data$Postoperative.stroke == 0,]
+  sampled_nonevents <- sample(1:nrow(nonevents),
+                           size = nrow(nonevents), replace = TRUE)
+  bs_nonevents      <- nonevents[sampled_nonevents,]
+  
+  # Complete bootstrap sample
+  bs_sample         <- rbind(bs_events,bs_nonevents)
+  
+  ifelse(with(bs_sample, {var(CT) == 0 | var(Age) == 0 | var(Gender) == 0 | 
+      var(Smoker) == 0 | all(duplicated(Diabetes.Control)[-1L]) | 
+      var(CreaCl) == 0 | var(Dialysis) == 0 | var(Hypertension) == 0 | 
+      var(Peripheral.Vascular.Disease) == 0 | var(Cerebrovascular.Accident) == 0 | 
+      var(Cerebrovascular.Disease ) == 0 | var(Myocardial.Infarction) == 0 | var(Congestive.Heart.Failure) ==0 | 
+      all(duplicated(Angina.Type)[-1L]) | var(Afib.flutter) == 0 | 
+      all(duplicated(Number.of.Diseased.Coronary.Vessels)[-1L]) | var(Left.Main.Disease) == 0 | 
+      var(Ejection.Fraction) == 0 | all(duplicated(Status)[-1L]) | var(Dyslipidemia) == 0 | 
+      var(Lipid.Lowering) == 0 | var(Previous.Valve) == 0 | var(Previous.Coronary.Artery.Bypass) == 0 | 
+      var(Year.CABG) == 0} == FALSE),{
   
   # Estimate Firth model in bootstrap sample
   Firth_full_bs   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
-                            Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
-                            Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
-                            Cerebrovascular.Disease + Myocardial.Infarction + 
-                            Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
-                            Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
-                            Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
-                            Previous.Valve + Previous.Coronary.Artery.Bypass +
-                            Year.CABG,
-                          data = bs_sample,
-                          firth = TRUE, # set firth = FALSE for maximum likelihood estimation
-                          pl = FALSE)   # do not compute profile likelihood confidence intervals
+                               Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
+                               Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
+                               Cerebrovascular.Disease + Myocardial.Infarction + 
+                               Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
+                               Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
+                               Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
+                               Previous.Valve + Previous.Coronary.Artery.Bypass +
+                               Year.CABG,
+                             data = bs_sample,
+                             firth = TRUE, # set firth = FALSE for maximum likelihood estimation
+                             pl = FALSE)   # do not compute profile likelihood confidence intervals
   
   
   # Re-estimate intercept in bootrap sample
   pred_intercept_bs       <- Firth_full_bs$linear.predictors
   intercept_Firth_full_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs), 
-                              family = binomial)$coefficients[1]
+                                 family = binomial)$coefficients[1]
   
   mod_mat <- model.matrix(as.formula(
     Firth_full_bs$call[["formula"]]),
@@ -147,15 +141,48 @@ for(i in 1:b_rep){
   PredA1 <- plogis(as.vector(mod_mat %*% Firth_full_bs$coefficients + intercept_Firth_full_bs))
   
   CI_marginal_OR[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
-  
+  },{
+    CI_marginal_OR[i,] <- NA
+  })
 }
 
 # Obtain MOR + CI
-MOR_full_Firth_Low <- round(quantile(CI_marginal_OR, 0.025), digits = 2)
-MOR_full_Firth_Up  <- round(quantile(CI_marginal_OR, 0.975), digits = 2)
+sum(is.na(CI_marginal_OR)) # 33 out of 500 bootstrap resamplings rejected
+                           # because no variance in variables.
+MOR_full_Firth_Low <- round(quantile(CI_marginal_OR, 0.025, na.rm = T), digits = 2)
+MOR_full_Firth_Up  <- round(quantile(CI_marginal_OR, 0.975, na.rm = T), digits = 2)
 paste0(round(MOR_full_Firth_Est,digits=2),
        "(95% CI, ", MOR_full_Firth_Low,
        "; ", MOR_full_Firth_Up,")")
+
+
+
+# Conditional OR, FLIC, backward elimination ----
+#------------------------------------------------------------------------------#
+
+# Estimate model
+Firth_selected      <- backward(Firth_full,
+                                scope = c("Age", "Gender", "Smoker", 
+                                          "Diabetes.Control", "CreaCl", "Dialysis", 
+                                          "Hypertension", "Peripheral.Vascular.Disease",
+                                          "Cerebrovascular.Accident", 
+                                          "Cerebrovascular.Disease", "Myocardial.Infarction", 
+                                          "Congestive.Heart.Failure", "Angina.Type", 
+                                          "Afib.flutter", "Number.of.Diseased.Coronary.Vessels",
+                                          "Left.Main.Disease", "Ejection.Fraction",
+                                          "Status", "Dyslipidemia", "Lipid.Lowering",
+                                          "Previous.Valve", "Previous.Coronary.Artery.Bypass",
+                                          "Year.CABG"),
+                                slstay = 0.157,
+                                trace = FALSE)
+
+# Obtain coefficient + CI
+cOR_selected_Firth_Est <- round( exp( coef( Firth_selected)["CT"]), digits = 2)
+cOR_selected_Firth_Low <- round( exp( confint(Firth_selected)[2,1]), digits=2)
+cOR_selected_Firth_Up  <- round( exp( confint(Firth_selected)[2,2]), digits=2)
+paste0(cOR_selected_Firth_Est,
+       "(95% CI, ", cOR_selected_Firth_Low,
+       "; ", cOR_selected_Firth_Up,")")
 
 
 # Marginal OR, FLIC, backward elimination ----
