@@ -191,7 +191,7 @@ To obtain an unadjusted conditional OR and marginal RR, I estimate an ML or FLIC
   
 Code can be found in ./rcode/analyses/analyse_data.R   
    
-Question: I could also have obtained the MRR as pY1 <- mean(data$Y[data$A==1]) ;  pY0 <- mean(data$Y[data$A==0]);  MRR <- pY1/pY0. What do you think is a better approach?
+Question: I could also have obtained the MRR as pY1 <- mean(data$Y[data$A==1]) ;  pY0 <- mean(data$Y[data$A==0]);  MRR <- pY1/pY0. That does not seem completely in line with the FLIC estimator to me. What do you think is a better approach?
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 #-------------------------------------------------------------------#
@@ -210,7 +210,7 @@ unadjusted <- logistf(Y~A,
   
   # Re-estimate intercept
   unadjusted_int  <- glm(data$Y ~ 
-                           offset(as.matrix(data$Y, data$A) %*%
+                           offset(as.matrix(data$A) %*%
                                     coef(unadjusted)[-1]),
                          family = binomial)
   
