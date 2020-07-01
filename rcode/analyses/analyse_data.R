@@ -31,7 +31,7 @@ analyse_data <- function(analysis_scenario,
   
   # Re-estimate intercept
   unadjusted_int  <- glm(data$Y ~ 
-                           offset(as.matrix(data$Y, data$A) %*% coef(unadjusted)[-1]),
+                           offset(as.matrix(data$A) %*% coef(unadjusted)[-1]),
                          family = binomial)
   
   # Obtain marginal risk ratio and marginal odds ratio
