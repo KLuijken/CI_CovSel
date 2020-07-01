@@ -132,10 +132,20 @@ MOR_selected_Firth_Est <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) *
 
 
 # Bootstrap confidence interval:
-b_rep <- 5
+b_rep <- 1
 seeds <- 1:b_rep
-CI_marginal_OR_full     <- matrix(NA, nrow = b_rep, ncol = 1)
-CI_marginal_OR_selected <- matrix(NA, nrow = b_rep, ncol = 1)
+coefficients_full <-
+  coefficients_selected <- matrix(0,
+                                  ncol = length(coef(Firth_full)),
+                                  nrow = b_rep,
+                               dimnames = list(NULL, names(coef(Firth_full))))
+
+CI_marginal_OR_full     <- 
+  CI_marginal_OR_selected <- matrix(NA, nrow = b_rep, ncol = 1)
+
+# Warning message:
+#   In if (working$df == 1 | working$df == mat[mat[, 3] == max(mat[,  :
+#     the condition has length > 1 and only the first element will be used
 
 for(i in 1:b_rep){
   # Sample bootstrap data using prespecified seeds
@@ -174,11 +184,16 @@ for(i in 1:b_rep){
   intercept_Firth_full_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs), 
                                  family = binomial)$coefficients[1]
   
+  # Store coefficients
+  coefficients_full[,"(Intercept)"]  <- intercept_Firth_full_bs
+  coefficients_full[i, names(
+    coef(Firth_full_bs)[-1])]        <- coef(Firth_full_bs)[-1]
+  
+  # Estimate MOR in bootrap sample
   mod_mat <- model.matrix(as.formula(
     Firth_full_bs$call[["formula"]]),
     data = bs_sample)
   
-  # Estimate MOR in bootrap sample
   mod_mat[,"CT"] <- 0
   PredA0 <- plogis(as.vector(mod_mat %*% Firth_full_bs$coefficients + intercept_Firth_full_bs))
   mod_mat[,"CT"] <- 1
@@ -187,32 +202,39 @@ for(i in 1:b_rep){
   CI_marginal_OR_full[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
   
   
-  #### Selected model: perform backward elimination in the bootstrap sample
-  Firth_selected_bs      <- backward(Firth_full_bs,
-                                      scope = colnames(bs_sample)[
-                                        !(colnames(bs_sample) %in% c("Postoperative.stroke","CT"))],
-                                      slstay = 0.157,
-                                      trace = FALSE,
-                                      data = bs_sample)
-  
-  # Re-estimate intercept in bootrap sample
-  pred_intercept_bs       <- Firth_selected_bs$linear.predictors
-  intercept_Firth_selected_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs), 
-                                     family = binomial)$coefficients[1]
-  
-  mod_mat <- model.matrix(as.formula(
-    Firth_selected_bs$call[["formula"]]),
-    data = bs_sample)
-  
-  # Estimate MOR in bootrap sample
-  mod_mat[,"CT"] <- 0
-  PredA0 <- plogis(as.vector(mod_mat %*% Firth_selected_bs$coefficients + intercept_Firth_selected_bs))
-  mod_mat[,"CT"] <- 1
-  PredA1 <- plogis(as.vector(mod_mat %*% Firth_selected_bs$coefficients + intercept_Firth_selected_bs))
-  
-  CI_marginal_OR_selected[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
-  
-  
+  # #### Selected model: perform backward elimination in the bootstrap sample
+  # Firth_selected_bs      <- backward(Firth_full_bs,
+  #                                     scope = colnames(bs_sample)[
+  #                                       !(colnames(bs_sample) %in% c("Postoperative.stroke","CT"))],
+  #                                     slstay = 0.157,
+  #                                     trace = FALSE,
+  #                                     data = bs_sample,
+  #                                     pl = F,
+  #                                     analysis_scenario = NULL)
+  # 
+  # # Re-estimate intercept in bootrap sample
+  # pred_intercept_bs           <- Firth_selected_bs$linear.predictors
+  # intercept_Firth_selected_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs),
+  #                                    family = binomial)$coefficients[1]
+  # 
+  # # Store coefficients
+  # coefficients_selected[,"(Intercept)"]  <- intercept_Firth_selected_bs
+  # coefficients_selected[i, names(
+  #   coef(Firth_selected_bs)[-1])]        <- coef(Firth_selected_bs)[-1]
+  # 
+  # # Estimate MOR in bootrap sample
+  # mod_mat <- model.matrix(as.formula(
+  #   Firth_selected_bs$call[["formula"]]),
+  #   data = bs_sample)
+  # 
+  # mod_mat[,"CT"] <- 0
+  # PredA0 <- plogis(as.vector(mod_mat %*% Firth_selected_bs$coefficients + intercept_Firth_selected_bs))
+  # mod_mat[,"CT"] <- 1
+  # PredA1 <- plogis(as.vector(mod_mat %*% Firth_selected_bs$coefficients + intercept_Firth_selected_bs))
+  # 
+  # CI_marginal_OR_selected[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
+
+
 }
 
 # Obtain MOR + CI
@@ -222,6 +244,10 @@ paste0(round(MOR_full_Firth_Est,digits=2),
        "(95% CI, ", MOR_full_Firth_Low,
        "; ", MOR_full_Firth_Up,")")
 
+# Obtain number of variables
+boot_01_full <- (coefficients_full != 0) * 1
+boot_inclusion_full <- apply(boot_01_full, 2, function(x) sum(x) / length(x) * 100)
+
 # Obtain MOR + CI model with backward elimination
 MOR_selected_Firth_Low <- round(quantile(CI_marginal_OR_selected, 0.025), digits = 2)
 MOR_selected_Firth_Up  <- round(quantile(CI_marginal_OR_selected, 0.975), digits = 2)
@@ -229,36 +255,9 @@ paste0(round(MOR_selected_Firth_Est,digits=2),
        "(95% CI, ", MOR_selected_Firth_Low,
        "; ", MOR_selected_Firth_Up,")")
 
-# Bootstrap confidence interval:
-b_rep <- 100
-seeds <- sample(1:100000, size = b_rep, replace = FALSE)
-CI_marginal_OR <- matrix(NA, nrow = b_rep, ncol = 1)
-
-for(i in 1:b_rep){
-  # Sample bootstrap data using prespecified seeds
-  set.seed(seeds[i])
-  sampled_rows <- sample(1:nrow(CABG_data), size = nrow(CABG_data), replace = TRUE)
-  bs_sample <- CABG_data[sampled_rows,]
-  
-  # Estimate Firth model in bootstrap sample
-  Firth_full_bs   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker + 
-                            Diabetes.Control + CreaCl+ Dialysis + Hypertension + 
-                            Peripheral.Vascular.Disease + Cerebrovascular.Accident + 
-                            Cerebrovascular.Disease + Myocardial.Infarction + 
-                            Congestive.Heart.Failure + Angina.Type + Afib.flutter + 
-                            Number.of.Diseased.Coronary.Vessels + Left.Main.Disease +
-                            Ejection.Fraction + Status + Dyslipidemia + Lipid.Lowering +
-                            Previous.Valve + Previous.Coronary.Artery.Bypass +
-                            Year.CABG,
-                          data = bs_sample,
-                          firth = TRUE, # set firth = FALSE for maximum likelihood estimation
-                          pl = FALSE)   # do not compute profile likelihood confidence intervals
-  
-  # Perform backward elimination in bootstrap sample
-  
-}
-
-
+# Obtain number of variables
+boot_01_selected <- (coefficients_selected != 0) * 1
+boot_inclusion_selected <- apply(boot_01_selected, 2, function(x) sum(x) / length(x) * 100)
 
 
 # Investigate individual patient risks ----
