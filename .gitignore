@@ -7,6 +7,7 @@ data/summarised
 data/poc
 data/diagnostics
 ToDo.txt
+thoughts/
 
 .Rhistory
 *.rds
