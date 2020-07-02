@@ -44,9 +44,9 @@ save_results <- function(results){
 }
 
 # Generate seeds
-get_seeds <- function(rep){
+get_seeds <- function(all_datagen_scenarios, rep){
   set.seed(20200501)
-  n_seed <- nrow(datagen_scenarios()) * rep 
+  n_seed <- nrow(all_datagen_scenarios) * rep 
   seed <- sample(1:1e8, 
                  size = n_seed, 
                  replace = FALSE)
@@ -143,7 +143,8 @@ sim_one_datagen_scenario <- function(datagen_scenario,
 run_sim <- function(rep, 
                     use_datagen_scenarios,
                     use_analysis_scenarios,
-                    seeds = get_seeds(rep = rep)){
+                    seeds = get_seeds(all_datagen_scenarios = all_datagen_scenarios,
+                                      rep = rep)){
   invisible(apply(use_datagen_scenarios, 
                   1, 
                   FUN = sim_one_datagen_scenario, 
