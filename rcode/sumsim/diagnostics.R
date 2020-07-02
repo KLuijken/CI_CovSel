@@ -12,18 +12,22 @@
 
 diagn_freqs <- function(use_datagen_scenarios){
   frequency_A <- data.frame(matrix(NA, nrow = rep, ncol = nrow(use_datagen_scenarios)))
-  colnames(frequency_A) <- paste0("freqA_S",1:nrow(use_datagen_scenarios))
+  colnames(frequency_A) <- paste0("freqA_S",use_datagen_scenarios[['scen_num']])
   frequency_Y <- data.frame(matrix(NA, nrow = rep, ncol = nrow(use_datagen_scenarios)))
-  colnames(frequency_Y) <- paste0("freqY_S",1:nrow(use_datagen_scenarios),
+  colnames(frequency_Y) <- paste0("freqY_S",use_datagen_scenarios[['scen_num']],
                                   "_Yint = ",use_datagen_scenarios[['Yint']])
   
   for(i in 1:nrow(use_datagen_scenarios)){
-    results <- readRDS(paste0("./data/raw/descriptives/S",i,".rds"))
+    results <- readRDS(paste0("./data/raw/descriptives/S",use_datagen_scenarios[i,"scen_num"],".rds"))
     frequency_A[,i] <- results$freq_A
     frequency_Y[,i] <- results$freq_Y
     
   }
   
+  # Create output directory
+  dir.create(file.path(".","data","diagnostics"), recursive = TRUE)
+  
+  # Save diagnostics
   print(dfSummary(frequency_A,
                   round.digits=3, varnumbers = F),
         file=file.path("./data/diagnostics/FrequencyA.html"),
