@@ -11,7 +11,6 @@
 source("./rcode/analyses/helpers/be_firth.R")
 source("./rcode/analyses/helpers/MRR.R")
 source("./rcode/analyses/helpers/process_models.R")
-source("./rcode/analyses/helpers/unadjusted.R")
 
 
 # Analyse data  ----
