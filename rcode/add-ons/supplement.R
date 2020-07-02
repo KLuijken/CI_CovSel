@@ -170,7 +170,7 @@ generate_plot_input <- function(sigmaA, sigmaL, sigmaY, alpha, beta, gamma, n,
     scale_color_manual(name = "Model", values = c("Full" = "navyblue","Reduced"= "red")) +
     ylab(expression("Bias("~hat(beta)~")")) +
     xlab(element_text(varied_par_name))+
-    ylim(0,0.5)+
+    ylim(0,0.25)+
     theme_classic() + theme(legend.position ="right")
   
   plot_var <- ggplot(var) +
@@ -191,7 +191,7 @@ generate_plot_input <- function(sigmaA, sigmaL, sigmaY, alpha, beta, gamma, n,
     scale_color_manual(name = "Model", values = c("full" = "navyblue","reduced"= "red")) +
     ylab(expression("MSE("~hat(beta)~")")) + 
     xlab(element_text(varied_par_name))+
-    ylim(0,0.28)+
+    ylim(0,0.1)+
     theme_classic()
   
   legend <- cowplot::get_legend(plot_bias + theme(legend.position = "right"))
