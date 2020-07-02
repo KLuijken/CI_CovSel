@@ -45,7 +45,8 @@ diagn_freqs <- function(use_datagen_scenarios){
 
 diagn_warnings_onemethod <- function(use_datagen_scenarios, method, pcutoff){
   for(i in 1:nrow(use_datagen_scenarios)){
-    results <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",i,".rds"))
+    results <- readRDS(paste0("./data/raw/",method,"_",pcutoff,"/S",
+                              use_datagen_scenarios[i,"scen_num"],".rds"))
     
     # Store model warnings
     if(!identical(results$mod_warning[!is.na(results$mod_warning)],
