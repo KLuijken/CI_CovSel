@@ -1,35 +1,67 @@
-
 # Load libraries and data  ----
 #------------------------------------------------------------------------------#
 library(loopR)
 library(ggplot2)
 Comparison <- readRDS("./data/poc/CICovsel_POC.rds")
 
-# Create figure proof of concept ----
+# Create figure proof of concept for MRR ----
 #------------------------------------------------------------------------------#
-Comparison$eventrate <- Comparison$Yint
-Comparison$eventrate[Comparison$Yint == 0] <- 0.5
-Comparison$eventrate[Comparison$Yint == -1.65] <- 0.2
+Comparison$Eventrate <- Comparison$Yint
+Comparison$Eventrate[Comparison$Yint == 0] <- 0.5
+Comparison$Eventrate[Comparison$Yint == -1.65] <- 0.2
+Comparison <- Comparison[Comparison$nobs < 300,]
+names(Comparison)[names(Comparison) == "bLA"] <- "bAL"
+names(Comparison)[names(Comparison) == "bLY"] <- "bYL"
 
-
-POCplot.dat <- data.frame(Comparison[,c('nobs','eventrate','bLA', 'bLY', 'Bias2_omit', 'Var')])
+POCplot.dat <- data.frame(Comparison[,c('nobs','Eventrate','bAL', 'bYL', 'Bias2_omit_MRR', 'Var_MRR')])
 POCplot <- nested_loop_plot(POCplot.dat,
-                 x = "bLA",
-                 grid_rows = "bLY",
-                 grid_cols = "eventrate",
-                 steps = "nobs",
-                 steps_y_height = 0.01,
-                 steps_y_base = 0,
-                 steps_values_annotate = T,
-                 steps_names = c("Sample size"),
-                 colors = c("red3","blue"),
-                 ylim = c(-0.04,0.04),
-                 legend_labels = c("Bias_omit^2","Var_full - Var_omit"),
-                 y_name = NULL,
-                 x_name = "Association covariate - exposure")
+                            x = "bAL",
+                            grid_rows = "bYL",
+                            grid_cols = "Eventrate",
+                            steps = "nobs",
+                            steps_y_height = 0.01,
+                            steps_y_base = -0.02,
+                            steps_values_annotate = T,
+                            steps_names = c("Sample size"),
+                            colors = c("red3","blue"),
+                            ylim = c(-0.04,0.04),
+                            legend_labels = c(expression("Bias"["omit"]^2),expression("Var"["full"] - "Var"["omit"])),
+                            y_name = "Mean squared error of log(marginal RR)",
+                            x_name = "Association exposure - covariate (bAL)")
 
 
 
-pdf("./results/figures/POC.pdf", width = 20, height = 10)
+pdf("./results/figures/POC.pdf", width = 14, height = 10)
+POCplot
+dev.off()
+
+# Create figure proof of concept for OR ----
+#------------------------------------------------------------------------------#
+Comparison$Eventrate <- Comparison$Yint
+Comparison$Eventrate[Comparison$Yint == 0] <- 0.5
+Comparison$Eventrate[Comparison$Yint == -1.65] <- 0.2
+Comparison <- Comparison[Comparison$nobs < 300,]
+names(Comparison)[names(Comparison) == "bLA"] <- "bAL"
+names(Comparison)[names(Comparison) == "bLY"] <- "bYL"
+
+POCplot.dat <- data.frame(Comparison[,c('nobs','Eventrate','bAL', 'bYL', 'Bias2_omit_OR', 'Var_OR')])
+POCplot <- nested_loop_plot(POCplot.dat,
+                            x = "bAL",
+                            grid_rows = "bYL",
+                            grid_cols = "Eventrate",
+                            steps = "nobs",
+                            steps_y_height = 0.01,
+                            steps_y_base = -0.02,
+                            steps_values_annotate = T,
+                            steps_names = c("Sample size"),
+                            colors = c("red3","blue"),
+                            ylim = c(-0.04,0.09),
+                            legend_labels = c(expression("Bias"["omit"]^2),expression("Var"["full"] - "Var"["omit"])),
+                            y_name = "Mean squared error of conditional OR",
+                            x_name = "Association exposure - covariate (bAL)")
+
+
+
+pdf("./results/figures/POC_OR.pdf", width = 14, height = 10)
 POCplot
 dev.off()
