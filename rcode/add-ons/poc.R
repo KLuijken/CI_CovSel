@@ -5,6 +5,8 @@
 # Proof of concept: when to use selection of potential confounders
 #------------------------------------------------------------------------------#
 
+# Running this proof-of-concept simulation takes around 6.5 hours
+
 
 # Description central principle:
 # Dgm: binary exposure (A), single continuous covariate (L), binary outcome (Y).
