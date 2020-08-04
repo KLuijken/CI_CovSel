@@ -8,12 +8,13 @@
 # This script describes the analysis on simulated data of the example CABG study
 # presented in manuscript section 3. The following analyses are presented:
 ## conditional odds ratio of a full model, estimated using FLIC
+## marginal odds ratio of a full model, estimated using predicted potential 
+#     outcomes of a FLIC model
 ## conditional odds ratio of a full model, estimated using FLIC and backward 
 #     elimination
 ## marginal odds ratio of a full model, estimated using predicted potential 
-#     outcomes of a FLIC model
-## marginal odds ratio of a full model, estimated using predicted potential 
 #     outcomes of a FLIC model and backward elimination
+## confidence intervals for the marginal odds ratios are obtained using bootstrap
 
 
 # Load librairies + source code ----
@@ -21,6 +22,50 @@
 library(logistf)
 
 source(file = "./rcode/add-ons/simulated_CABG_example/simulate_data_Gregorich.R")
+
+# Fix bug in original backward() function in logistf package
+logistf_backward <- function (object, scope, steps = 1000, slstay = 0.05, trace = TRUE, 
+                              printwork = FALSE, ...) 
+{
+  istep <- 0
+  working <- object
+  if (trace) {
+    cat("Step ", istep, ": starting model\n")
+    if (printwork) {
+      print(working)
+      cat("\n\n")
+    }
+  }
+  if (missing(scope)) 
+    scope <- attr(terms(working), "term.labels")
+  while (istep < steps & working$df >= 1) {
+    istep <- istep + 1
+    mat <- drop1(working)
+    inscope <- rownames(mat)[match(scope, rownames(mat))] ## Big-fix: use variable names to define scope
+    inscope <- inscope[!is.na(inscope)]
+    
+    if (all(mat[inscope, 3] < slstay)){      ## Bug-fix: added inscope to subset the p-values
+      break}
+    removal <- rownames(mat[inscope,])[mat[inscope, 3] == max(mat[inscope, 
+                                                                  3])]
+    newform = as.formula(paste("~.-", removal))
+    if (working$df == 1 | working$df == mat[mat[, 3] == max(mat[, 3]), 2]) 
+      working <- update(working, formula = newform, pl = FALSE)
+    else working <- update(working, formula = newform)
+    if (trace) {
+      cat("Step ", istep, ": removed ", removal, 
+          " (P=", max(mat[, 3]), ")\n")
+      if (printwork) {
+        print(working)
+        cat("\n\n")
+      }
+    }
+  }
+  if (trace) 
+    cat("\n")
+  return(working)
+}
+
 
 # Generate simulated data ----
 #------------------------------------------------------------------------------#
@@ -60,19 +105,19 @@ paste0(cOR_full_Firth_Est,
 
 # Use Firth_full model previous step.
 # Re-estimate the intercept
-pred_intercept       <- Firth_full$linear.predictors
+Firth_full_mod_mat <- model.matrix(as.formula(
+  Firth_full$call[["formula"]]),
+  data = CABG_data)
+
+pred_intercept       <- Firth_full_mod_mat[,-1] %*% Firth_full$coefficients[-1]
 intercept_Firth_full <- glm(CABG_data$Postoperative.stroke ~ offset(pred_intercept), 
                             family = binomial)$coefficients[1]
 
 # Obtain predicted potential outcomes
-mod_mat <- model.matrix(as.formula(
-  Firth_full$call[["formula"]]),
-  data = CABG_data)
-
-mod_mat[,"CT"] <- 0
-PredA0 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth_full))
-mod_mat[,"CT"] <- 1
-PredA1 <- plogis(as.vector(mod_mat %*% Firth_full$coefficients + intercept_Firth_full))
+Firth_full_mod_mat[,"CT"] <- 0
+PredA0 <- plogis(as.vector(Firth_full_mod_mat[,-1] %*% Firth_full$coefficients[-1] + intercept_Firth_full))
+Firth_full_mod_mat[,"CT"] <- 1
+PredA1 <- plogis(as.vector(Firth_full_mod_mat[,-1] %*% Firth_full$coefficients[-1] + intercept_Firth_full))
 
 # Estimate Marginal OR
 MOR_full_Firth_Est <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
@@ -113,26 +158,26 @@ paste0(cOR_selected_Firth_Est,
 
 # Use Firth_selected model previous step.
 # Re-estimate the intercept
-pred_intercept       <- Firth_selected$linear.predictors
+Firth_selected_mod_mat <- model.matrix(as.formula(
+  Firth_selected$call[["formula"]]),
+  data = CABG_data)
+pred_intercept       <- Firth_selected_mod_mat[,-1] %*% Firth_selected$coefficients[-1]
 intercept_Firth_selected <- glm(CABG_data$Postoperative.stroke ~ offset(pred_intercept), 
                             family = binomial)$coefficients[1]
 
 # Obtain predicted potential outcomes
-mod_mat <- model.matrix(as.formula(
-  Firth_selected$call[["formula"]]),
-  data = CABG_data)
-
-mod_mat[,"CT"] <- 0
-PredA0 <- plogis(as.vector(mod_mat %*% Firth_selected$coefficients + intercept_Firth_selected))
-mod_mat[,"CT"] <- 1
-PredA1 <- plogis(as.vector(mod_mat %*% Firth_selected$coefficients + intercept_Firth_selected))
+Firth_selected_mod_mat[,"CT"] <- 0
+PredA0 <- plogis(as.vector(Firth_selected_mod_mat[,-1] %*% Firth_selected$coefficients[-1] + intercept_Firth_selected))
+Firth_selected_mod_mat[,"CT"] <- 1
+PredA1 <- plogis(as.vector(Firth_selected_mod_mat[,-1] %*% Firth_selected$coefficients[-1] + intercept_Firth_selected))
 
 # Estimate Marginal OR
 MOR_selected_Firth_Est <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
 
 
-# Bootstrap confidence interval:
-b_rep <- 1
+# Bootstrap confidence interval ----
+#------------------------------------------------------------------------------#
+b_rep <- 500
 seeds <- 1:b_rep
 coefficients_full <-
   coefficients_selected <- matrix(0,
@@ -143,10 +188,7 @@ coefficients_full <-
 CI_marginal_OR_full     <- 
   CI_marginal_OR_selected <- matrix(NA, nrow = b_rep, ncol = 1)
 
-# Warning message:
-#   In if (working$df == 1 | working$df == mat[mat[, 3] == max(mat[,  :
-#     the condition has length > 1 and only the first element will be used
-
+# Run for 500 bootstrap resamplings
 for(i in 1:b_rep){
   # Sample bootstrap data using prespecified seeds
   set.seed(seeds[i])
@@ -180,7 +222,10 @@ for(i in 1:b_rep){
   
   
   # Re-estimate intercept in bootrap sample
-  pred_intercept_bs       <- Firth_full_bs$linear.predictors
+  Firth_full_bs_mod_mat <- model.matrix(as.formula(
+    Firth_full_bs$call[["formula"]]),
+    data = bs_sample)
+  pred_intercept_bs       <- Firth_full_bs_mod_mat[,-1] %*% Firth_full_bs$coefficients[-1]
   intercept_Firth_full_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs), 
                                  family = binomial)$coefficients[1]
   
@@ -190,53 +235,48 @@ for(i in 1:b_rep){
     coef(Firth_full_bs)[-1])]        <- coef(Firth_full_bs)[-1]
   
   # Estimate MOR in bootrap sample
-  mod_mat <- model.matrix(as.formula(
-    Firth_full_bs$call[["formula"]]),
-    data = bs_sample)
-  
-  mod_mat[,"CT"] <- 0
-  PredA0 <- plogis(as.vector(mod_mat %*% Firth_full_bs$coefficients + intercept_Firth_full_bs))
-  mod_mat[,"CT"] <- 1
-  PredA1 <- plogis(as.vector(mod_mat %*% Firth_full_bs$coefficients + intercept_Firth_full_bs))
+  Firth_full_bs_mod_mat[,"CT"] <- 0
+  PredA0 <- plogis(as.vector(Firth_full_bs_mod_mat[,-1] %*% Firth_full_bs$coefficients[-1] + intercept_Firth_full_bs))
+  Firth_full_bs_mod_mat[,"CT"] <- 1
+  PredA1 <- plogis(as.vector(Firth_full_bs_mod_mat[,-1] %*% Firth_full_bs$coefficients[-1] + intercept_Firth_full_bs))
   
   CI_marginal_OR_full[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
   
   
-  # #### Selected model: perform backward elimination in the bootstrap sample
-  # Firth_selected_bs      <- backward(Firth_full_bs,
-  #                                     scope = colnames(bs_sample)[
-  #                                       !(colnames(bs_sample) %in% c("Postoperative.stroke","CT"))],
-  #                                     slstay = 0.157,
-  #                                     trace = FALSE,
-  #                                     data = bs_sample,
-  #                                     pl = F,
-  #                                     analysis_scenario = NULL)
-  # 
-  # # Re-estimate intercept in bootrap sample
-  # pred_intercept_bs           <- Firth_selected_bs$linear.predictors
-  # intercept_Firth_selected_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs),
-  #                                    family = binomial)$coefficients[1]
-  # 
-  # # Store coefficients
-  # coefficients_selected[,"(Intercept)"]  <- intercept_Firth_selected_bs
-  # coefficients_selected[i, names(
-  #   coef(Firth_selected_bs)[-1])]        <- coef(Firth_selected_bs)[-1]
-  # 
-  # # Estimate MOR in bootrap sample
-  # mod_mat <- model.matrix(as.formula(
-  #   Firth_selected_bs$call[["formula"]]),
-  #   data = bs_sample)
-  # 
-  # mod_mat[,"CT"] <- 0
-  # PredA0 <- plogis(as.vector(mod_mat %*% Firth_selected_bs$coefficients + intercept_Firth_selected_bs))
-  # mod_mat[,"CT"] <- 1
-  # PredA1 <- plogis(as.vector(mod_mat %*% Firth_selected_bs$coefficients + intercept_Firth_selected_bs))
-  # 
-  # CI_marginal_OR_selected[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
+  #### Selected model: perform backward elimination in the bootstrap sample
+  Firth_selected_bs      <- logistf_backward(Firth_full_bs,
+                                      scope = colnames(bs_sample)[
+                                        !(colnames(bs_sample) %in% c("Postoperative.stroke","CT",drop))],
+                                      slstay = 0.157,
+                                      trace = FALSE,
+                                      data = bs_sample,
+                                      pl = F)
+  
+  # Re-estimate intercept in bootrap sample
+  Firth_selected_bs_mod_mat <- model.matrix(as.formula(
+    Firth_selected_bs$call[["formula"]]),
+    data = bs_sample)
+  pred_intercept_bs           <- Firth_selected_bs_mod_mat[,-1] %*% Firth_selected_bs$coefficients[-1]
+  intercept_Firth_selected_bs <- glm(bs_sample$Postoperative.stroke ~ offset(pred_intercept_bs),
+                                     family = binomial)$coefficients[1]
+
+  # Store coefficients
+  coefficients_selected[,"(Intercept)"]  <- intercept_Firth_selected_bs
+  coefficients_selected[i, names(
+    coef(Firth_selected_bs)[-1])]        <- coef(Firth_selected_bs)[-1]
+
+  # Estimate MOR in bootrap sample
+  Firth_selected_bs_mod_mat[,"CT"] <- 0
+  PredA0 <- plogis(as.vector(Firth_selected_bs_mod_mat[,-1] %*% Firth_selected_bs$coefficients[-1] + intercept_Firth_selected_bs))
+  Firth_selected_bs_mod_mat[,"CT"] <- 1
+  PredA1 <- plogis(as.vector(Firth_selected_bs_mod_mat[,-1] %*% Firth_selected_bs$coefficients[-1] + intercept_Firth_selected_bs))
+
+  CI_marginal_OR_selected[i,] <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
 
 
 }
 
+# Summarize results
 # Obtain MOR + CI
 MOR_full_Firth_Low <- round(quantile(CI_marginal_OR_full, 0.025, na.rm = T), digits = 2)
 MOR_full_Firth_Up  <- round(quantile(CI_marginal_OR_full, 0.975, na.rm = T), digits = 2)
@@ -244,7 +284,7 @@ paste0(round(MOR_full_Firth_Est,digits=2),
        "(95% CI, ", MOR_full_Firth_Low,
        "; ", MOR_full_Firth_Up,")")
 
-# Obtain number of variables
+# Obtain number of variables: stability measures
 boot_01_full <- (coefficients_full != 0) * 1
 boot_inclusion_full <- apply(boot_01_full, 2, function(x) sum(x) / length(x) * 100)
 
@@ -255,90 +295,7 @@ paste0(round(MOR_selected_Firth_Est,digits=2),
        "(95% CI, ", MOR_selected_Firth_Low,
        "; ", MOR_selected_Firth_Up,")")
 
-# Obtain number of variables
+# Obtain number of variables: stability measures
 boot_01_selected <- (coefficients_selected != 0) * 1
 boot_inclusion_selected <- apply(boot_01_selected, 2, function(x) sum(x) / length(x) * 100)
 
-
-# Investigate individual patient risks ----
-#------------------------------------------------------------------------------#
-
-# Generate artificial high and low risk patients
-patient_high_exp <- data.frame(CT = 1, Age = 70, Gender = 1, Smoker = 1,
-                               Diabetes.Control = "Insulin", CreaCl = 45,
-                               Dialysis = 1, Hypertension = 1,
-                               Peripheral.Vascular.Disease = 1,
-                               Cerebrovascular.Accident = 1,
-                               Cerebrovascular.Disease = 1,
-                               Myocardial.Infarction =1,
-                               Congestive.Heart.Failure = 1,
-                               Angina.Type = "Unstable",
-                               Afib.flutter = 1,
-                               Number.of.Disease.Cornary.Vessels = "Three",
-                               Left.Main.Disease = 1,
-                               Ejection.Fraction = 21,
-                               Status = "Urgent",
-                               Dyslipidemia = 1,
-                               Lipid.Lowering = 1,
-                               Previous.Valve = 1,
-                               Previous.Coronary.Artery.Bypass = 1,
-                               Year.CABG = 2012)
-patient_high_unexp <- data.frame(CT = 0, Age = 70, Gender = 1, Smoker = 1,
-                                 Diabetes.Control = "Insulin", CreaCl = 45,
-                                 Dialysis = 1, Hypertension = 1,
-                                 Peripheral.Vascular.Disease = 1,
-                                 Cerebrovascular.Accident = 1,
-                                 Cerebrovascular.Disease = 1,
-                                 Myocardial.Infarction =1,
-                                 Congestive.Heart.Failure = 1,
-                                 Angina.Type = "Unstable",
-                                 Afib.flutter = 1,
-                                 Number.of.Disease.Cornary.Vessels = "Three",
-                                 Left.Main.Disease = 1,
-                                 Ejection.Fraction = 21,
-                                 Status = "Urgent",
-                                 Dyslipidemia = 1,
-                                 Lipid.Lowering = 1,
-                                 Previous.Valve = 1,
-                                 Previous.Coronary.Artery.Bypass = 1,
-                                 Year.CABG = 2012)
-
-patient_low_exp <- data.frame(CT = 1, Age = 45, Gender = 0, Smoker = 0,
-                               Diabetes.Control = "NoDiabetes", CreaCl = 95,
-                               Dialysis = 0, Hypertension = 0,
-                               Peripheral.Vascular.Disease = 0,
-                               Cerebrovascular.Accident = 0,
-                               Cerebrovascular.Disease = 0,
-                               Myocardial.Infarction = 0,
-                               Congestive.Heart.Failure = 0,
-                               Angina.Type = "0",
-                               Afib.flutter = 0,
-                               Number.of.Disease.Cornary.Vessels = "One",
-                               Left.Main.Disease = 0,
-                               Ejection.Fraction = 65,
-                               Status = "Elective",
-                               Dyslipidemia = 0,
-                               Lipid.Lowering = 0,
-                               Previous.Valve = 0,
-                               Previous.Coronary.Artery.Bypass = 0,
-                               Year.CABG = 2015)
-
-patient_low_unexp <- data.frame(CT = 0, Age = 45, Gender = 0, Smoker = 0,
-                              Diabetes.Control = "NoDiabetes", CreaCl = 95,
-                              Dialysis = 0, Hypertension = 0,
-                              Peripheral.Vascular.Disease = 0,
-                              Cerebrovascular.Accident = 0,
-                              Cerebrovascular.Disease = 0,
-                              Myocardial.Infarction = 0,
-                              Congestive.Heart.Failure = 0,
-                              Angina.Type = "0",
-                              Afib.flutter = 0,
-                              Number.of.Disease.Cornary.Vessels = "One",
-                              Left.Main.Disease = 0,
-                              Ejection.Fraction = 65,
-                              Status = "Elective",
-                              Dyslipidemia = 0,
-                              Lipid.Lowering = 0,
-                              Previous.Valve = 0,
-                              Previous.Coronary.Artery.Bypass = 0,
-                              Year.CABG = 2015)
