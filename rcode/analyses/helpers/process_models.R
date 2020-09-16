@@ -32,7 +32,7 @@ obtain_coefficients <- function(warning, model, intmodel,
                                 datagen_scenario = datagen_scenario){
   ifelse(is.na(warning$warning_mod),{
     int         <- ifelse(is.na(warning$warning_int),intmodel$coefficients[1],model$coefficients[1])
-    se_int      <- coef(summary(intmodel))[1,2]
+    se_int      <- ifelse(is.na(warning$warning_int),coef(summary(intmodel))[1,2],sqrt(diag(vcov(model, complete=T)))[1])
     coef_est    <- coef(model)[c("(Intercept)","A",
                                  paste0("L",seq(1:datagen_scenario[['nL']])))]
     coef_est[is.na(coef_est)] <- NA

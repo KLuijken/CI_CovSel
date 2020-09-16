@@ -16,9 +16,9 @@ estimate_marginals <- function(warning, data, int, modelcoefs){
     colnames(newdat) <- c(names(modelcoefs[-1]))
     
     newdat[,"A"] <- 0
-    PredA0 <- plogis(rep(1,times=nrow(newdat)) * int + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
+    PredA0 <- plogis(rep(1,times=nrow(newdat)) * intercept + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
     newdat[,"A"] <- 1
-    PredA1 <- plogis(rep(1,times=nrow(newdat)) * int + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
+    PredA1 <- plogis(rep(1,times=nrow(newdat)) * intercept + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
     
     MRR <- mean(PredA1)/mean(PredA0)
     MOR <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
