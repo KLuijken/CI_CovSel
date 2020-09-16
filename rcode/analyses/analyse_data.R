@@ -24,9 +24,9 @@ analyse_data <- function(analysis_scenario,
   # Unadjusted model ----
   # Estimate unadjusted model using maximum likelihood or FLIC, based on analysis scenario
   unadjusted <- logistf(Y~A,
-                         data = data,
-                         firth = isTRUE(analysis_scenario[['method']] == "FLIC"),
-                         pl = F)
+                        data = data,
+                        firth = isTRUE(analysis_scenario[['method']] == "FLIC"),
+                        pl = F)
   
   # Re-estimate intercept
   unadjusted_int  <- glm(data$Y ~ 
@@ -34,16 +34,16 @@ analyse_data <- function(analysis_scenario,
                          family = binomial)
   
   # Obtain marginal risk ratio and marginal odds ratio
-  marginals_unadj <- estimate_marginals(warning = NULL,
-                                          data = data,
-                                          int = unadjusted_int$coefficients[1],
-                                          modelcoefs = unadjusted$coefficients[-1])
+  marginals_unadj <- estimate_marginals(warning = list(warning_mod = NA, warning_int = NA),
+                                        data = data,
+                                        int = unadjusted_int$coefficients[1],
+                                        modelcoefs = unadjusted$coefficients)
   
   # Obtain model coefficients and standard errors
-  coefficients_unadj <- obtain_coefficients(warning = NULL,
-                                           model = unadjusted,
-                                           intmodel = unadjusted_int,
-                                           datagen_scenario = datagen_scenario)
+  coefficients_unadj <- obtain_coefficients(warning = list(warning_mod = NA, warning_int = NA),
+                                            model = unadjusted,
+                                            intmodel = unadjusted_int,
+                                            datagen_scenario = datagen_scenario)
   
   # Store results of unadjusted
   results_unadj      <- data.table(datagen_scenario[['scen_num']],
@@ -65,7 +65,7 @@ analyse_data <- function(analysis_scenario,
   full <- pre_model(inputmodel = full,
                     datagen_scenario = datagen_scenario,
                     data = data)
-
+  
   # Obtain warnings model estimation
   warnings_full     <- obtain_warnings(premodel = full$preM,
                                        preintmodel = full$preM_int)
@@ -74,7 +74,7 @@ analyse_data <- function(analysis_scenario,
   marginals_full    <- estimate_marginals(warning = warnings_full,
                                           data =data,
                                           int = full$M_int$coefficients[1],
-                                          modelcoefs = full$M$coefficients[-1])
+                                          modelcoefs = full$M$coefficients)
   
   # Obtain model coefficients and standard errors
   coefficients_full <- obtain_coefficients(warning = warnings_full,
@@ -90,59 +90,59 @@ analyse_data <- function(analysis_scenario,
                                   t(marginals_full),
                                   t(coefficients_full),
                                   t(warnings_full))
-                                  
+  
   # Selected model ----
   # Use backward elimination on full model (either ML or FLIC)
   selected <- tryCatch.W.E(backwardf(object = full$M,
-                                       slstay = analysis_scenario[['pcutoff']],
-                                       trace = FALSE,
-                                       scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
-                                       analysis_scenario = analysis_scenario,
-                                       pl = F)
-                            )
-
-   # Re-estimate intercept and store try_catch values and warnings in objects
-   selected <- pre_model(inputmodel = selected,
-                     datagen_scenario = datagen_scenario,
-                     data = data)
-   
-   # Obtain warnings model estimation
-   warnings_sel     <- obtain_warnings(premodel = selected$preM,
-                                       preintmodel = selected$preM_int)
-   
-   # Obtain marginal risk ratio and marginal odds ratio
-   marginals_sel    <- estimate_marginals(warning = warnings_sel,
-                                          data =data,
-                                          int = selected$M_int$coefficients[1], 
-                                          modelcoefs = selected$M$coefficients[-1])
-   
-   # Obtain model coefficients and standard errors
-   coefficients_sel <- obtain_coefficients(warning = warnings_sel,
-                                           model = selected$M,
-                                           intmodel = selected$M_int, 
-                                           datagen_scenario = datagen_scenario)
-   
-   # Store results of selected model
-   results_sel      <- data.table(datagen_scenario[['scen_num']], 
-                                  seed,
-                                  paste0("selected_",analysis_scenario[['pcutoff']]),
-                                  analysis_scenario[['method']],
-                                  t(marginals_sel),
-                                  t(coefficients_sel),
-                                  t(warnings_sel))
-
-   # Set colnames equal
-   colnames(results_unadj) <- 
+                                     slstay = as.numeric(analysis_scenario[['pcutoff']]),
+                                     trace = FALSE,
+                                     scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
+                                     analysis_scenario = analysis_scenario)
+                           
+  )
+  
+  # Re-estimate intercept and store try_catch values and warnings in objects
+  selected <- pre_model(inputmodel = selected,
+                        datagen_scenario = datagen_scenario,
+                        data = data)
+  
+  # Obtain warnings model estimation
+  warnings_sel     <- obtain_warnings(premodel = selected$preM,
+                                      preintmodel = selected$preM_int)
+  
+  # Obtain marginal risk ratio and marginal odds ratio
+  marginals_sel    <- estimate_marginals(warning = warnings_sel,
+                                         data =data,
+                                         int = selected$M_int$coefficients[1], 
+                                         modelcoefs = selected$M$coefficients)
+  
+  # Obtain model coefficients and standard errors
+  coefficients_sel <- obtain_coefficients(warning = warnings_sel,
+                                          model = selected$M,
+                                          intmodel = selected$M_int, 
+                                          datagen_scenario = datagen_scenario)
+  
+  # Store results of selected model
+  results_sel      <- data.table(datagen_scenario[['scen_num']], 
+                                 seed,
+                                 paste0("selected_",analysis_scenario[['pcutoff']]),
+                                 analysis_scenario[['method']],
+                                 t(marginals_sel),
+                                 t(coefficients_sel),
+                                 t(warnings_sel))
+  
+  # Set colnames equal
+  colnames(results_unadj) <- 
     colnames(results_full) <- 
-     colnames(results_sel)  <- c("scen_num","seed","model","method",
-                              "MRR",
-                              "MOR",
-                              "(Intercept)",
-                              names(data)[-1],
-                              "se(Intercept)",
-                              paste0("se(",names(data),")")[-1],
-                              "mod_warning",
-                              "intmod_warning")
+    colnames(results_sel)  <- c("scen_num","seed","model","method",
+                                "MRR",
+                                "MOR",
+                                "(Intercept)",
+                                names(data)[-1],
+                                "se(Intercept)",
+                                paste0("se(",names(data),")")[-1],
+                                "mod_warning",
+                                "intmod_warning")
   
   # Combine results in output matrix
   results <- rbind(results_unadj,results_full, results_sel, fill=T)

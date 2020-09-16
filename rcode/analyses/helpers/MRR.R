@@ -9,14 +9,16 @@
 #------------------------------------------------------------------------------#
 
 estimate_marginals <- function(warning, data, int, modelcoefs){
-  ifelse(all(is.na(warning)),{
-    newdat <- data.frame(data[,c(names(modelcoefs))])
-    colnames(newdat) <- c(names(modelcoefs))
+  ifelse(is.na(warning$warning_mod),{
+    intercept <- ifelse(is.na(warning$warning_int), int, modelcoefs[1])
+    
+    newdat <- data.frame(data[,c(names(modelcoefs[-1]))])
+    colnames(newdat) <- c(names(modelcoefs[-1]))
     
     newdat[,"A"] <- 0
-    PredA0 <- plogis(rep(1,times=nrow(newdat)) * int + as.matrix(newdat) %*% matrix(modelcoefs))
+    PredA0 <- plogis(rep(1,times=nrow(newdat)) * int + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
     newdat[,"A"] <- 1
-    PredA1 <- plogis(rep(1,times=nrow(newdat)) * int + as.matrix(newdat) %*% matrix(modelcoefs))
+    PredA1 <- plogis(rep(1,times=nrow(newdat)) * int + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
     
     MRR <- mean(PredA1)/mean(PredA0)
     MOR <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
@@ -24,7 +26,7 @@ estimate_marginals <- function(warning, data, int, modelcoefs){
   {
     MRR <- MOR <- NA
   })
-    
+  
   return(list(MRR = MRR, MOR = MOR))
 }
 

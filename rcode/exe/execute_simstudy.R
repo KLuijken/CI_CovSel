@@ -16,10 +16,8 @@ source(file = "./rcode/sumsim/diagnostics.R")
 source(file = "./rcode/visualisation/simresults_table.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
-all_datagen_scenarios <- datagen_scenarios()  # it takes a while to remove duplicate scenarios
-use_datagen_scenarios <- all_datagen_scenarios[1:100,]
+use_datagen_scenarios <- datagen_scenarios()
 use_analysis_scenarios <- analysis_scenarios()
-use_simulation_scenarios <- 1:nrow(use_datagen_scenarios)
 rep <- 10
 
 # Create filestructure  ----
