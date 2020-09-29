@@ -60,7 +60,7 @@ get_seeds <- function(all_datagen_scenarios, rep){
 perform_one_run <- function(datagen_scenario,
                             use_analysis_scenarios, seed){
   # Generate data
-  data <- gen_data(nevents = datagen_scenario[['nevents']],
+  df <- gen_data(nevents = datagen_scenario[['nevents']],
                        nL = datagen_scenario[['nL']],
                        bYA = datagen_scenario[['bYA']],
                        bL_const = datagen_scenario[['bL_const']],
@@ -74,15 +74,14 @@ perform_one_run <- function(datagen_scenario,
                        bYL4 = datagen_scenario[['bYL4']],
                        eventrate = datagen_scenario[['eventrate']],
                        Yint = datagen_scenario[['Yint']],
-                       sd_UY = datagen_scenario[['sd_UY']],
                        rhoL = datagen_scenario[['rhoL']],
                        seed = seed)
   
   # Data descriptives
   descriptives <- data.table(scen_num = datagen_scenario[['scen_num']],
                              seed = seed,
-                             freq_A = sum(data$A)/nrow(data),
-                             freq_Y = sum(data$Y)/nrow(data),
+                             freq_A = sum(df$A)/nrow(df),
+                             freq_Y = sum(df$Y)/nrow(df),
                              filepath = paste0("./data/raw/descriptives/S",
                                                datagen_scenario[['scen_num']], ".rds"))
   
@@ -94,7 +93,7 @@ perform_one_run <- function(datagen_scenario,
                    1, 
                    FUN = analyse_data,
                    datagen_scenario = datagen_scenario, 
-                   data = data,
+                   df = df,
                    seed = seed)
   # save analysis results
   lapply(results,

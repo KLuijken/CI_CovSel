@@ -9,7 +9,7 @@
 backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE, 
                         printwork = FALSE, analysis_scenario, ...){
   analysis_scenario <- analysis_scenario
-  data <-  object$data
+  data <-  data.frame(object$model)
   
   istep <- 0
   working <- object
@@ -34,8 +34,10 @@ backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE,
                                                  3])]
     newform = as.formula(paste("~.-", removal))
     if (working$df == 2 | working$df == mat[mat[, 3] == max(mat[, 3]), 2]){
-      working <- update(working, formula = newform, pl = FALSE)}else{ 
-        working <- update(working, formula = newform)}
+      working <- update(working, formula = newform, pl = FALSE, evaluate = FALSE)
+      working <- eval.parent(working)}else{ 
+        working <- update(working, formula = newform, evaluate = FALSE)
+        working <- eval.parent(working)}
     if (trace) {
       cat("drop1:\n")       
       print(mat)           
@@ -51,4 +53,15 @@ backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE,
   if (trace) 
     cat("\n")
   return(working)
+}
+
+backward_flic <- function(model, data){
+  M          <- model$value
+  Mpred      <- as.matrix(data[,names(coef(M)[-1])]) %*% coef(M)[-1]
+  # Re-estimate intercept
+  Mintercept <- glm(data$Y ~ offset(Mpred), family = binomial)
+  intercept  <- Mintercept$coefficients
+  se_int     <- sqrt(diag(vcov(Mintercept, complete=T)))
+  
+  return(list(intercept=intercept, se_intercept = se_int))
 }

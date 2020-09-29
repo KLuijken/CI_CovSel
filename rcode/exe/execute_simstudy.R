@@ -16,9 +16,10 @@ source(file = "./rcode/sumsim/diagnostics.R")
 source(file = "./rcode/visualisation/simresults_table.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
-use_datagen_scenarios <- datagen_scenarios()
+all_datagen_scenarios <- datagen_scenarios()  # Just for reproducibility during testing
+use_datagen_scenarios <- all_datagen_scenarios[1,]
 use_analysis_scenarios <- analysis_scenarios()
-rep <- 10
+rep <- 1
 
 # Create filestructure  ----
 #------------------------------------------------------------------------------#

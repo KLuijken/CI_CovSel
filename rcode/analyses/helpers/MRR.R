@@ -8,25 +8,19 @@
 # Estimate Marginal Ratios from logistic regression models ----
 #------------------------------------------------------------------------------#
 
-estimate_marginals <- function(warning, data, int, modelcoefs){
-  ifelse(is.na(warning$warning_mod),{
-    intercept <- ifelse(is.na(warning$warning_int), int, modelcoefs[1])
+estimate_marginals <- function(data, modelcoefs){
+  newdat <- data.frame(cbind(1,
+                               data[,c(names(modelcoefs[-1]))]))
+  colnames(newdat) <- c(names(modelcoefs))
     
-    newdat <- data.frame(data[,c(names(modelcoefs[-1]))])
-    colnames(newdat) <- c(names(modelcoefs[-1]))
+  newdat[,"A"] <- 0
+  PredA0 <- plogis(as.matrix(newdat) %*% matrix(modelcoefs))
+  newdat[,"A"] <- 1
+  PredA1 <- plogis(as.matrix(newdat) %*% matrix(modelcoefs))
     
-    newdat[,"A"] <- 0
-    PredA0 <- plogis(rep(1,times=nrow(newdat)) * intercept + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
-    newdat[,"A"] <- 1
-    PredA1 <- plogis(rep(1,times=nrow(newdat)) * intercept + as.matrix(newdat) %*% matrix(modelcoefs[-1]))
-    
-    MRR <- mean(PredA1)/mean(PredA0)
-    MOR <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
-  },
-  {
-    MRR <- MOR <- NA
-  })
-  
+  MRR <- mean(PredA1)/mean(PredA0)
+  MOR <- (mean(PredA1) * (1- mean(PredA0)))/((1-mean(PredA1)) * mean(PredA0))
+
   return(list(MRR = MRR, MOR = MOR))
 }
 

@@ -18,118 +18,138 @@ source("./rcode/analyses/helpers/process_models.R")
 
 # Output datatable with results of full and selected model for a single method
 analyse_data <- function(analysis_scenario,
-                         datagen_scenario,
-                         data,
-                         seed){
+                               datagen_scenario,
+                               df,
+                               seed){
   # Unadjusted model ----
   # Estimate unadjusted model using maximum likelihood or FLIC, based on analysis scenario
-  unadjusted <- logistf(Y~A,
-                        data = data,
-                        firth = isTRUE(analysis_scenario[['method']] == "FLIC"),
-                        pl = F)
+  unadjusted        <- tryCatch.W.E(logistf(Y ~ A,
+                               data = df,
+                               pl = FALSE,
+                               control = logistf.control(maxit = 50, maxstep = 2),
+                               firth = isTRUE(analysis_scenario[['method']] == "FLIC"),
+                               flic = TRUE))
   
-  # Re-estimate intercept
-  unadjusted_int  <- glm(data$Y ~ 
-                           offset(as.matrix(data$A) %*% coef(unadjusted)[-1]),
-                         family = binomial)
-  
-  # Obtain marginal risk ratio and marginal odds ratio
-  marginals_unadj <- estimate_marginals(warning = list(warning_mod = NA, warning_int = NA),
-                                        data = data,
-                                        int = unadjusted_int$coefficients[1],
-                                        modelcoefs = unadjusted$coefficients)
-  
-  # Obtain model coefficients and standard errors
-  coefficients_unadj <- obtain_coefficients(warning = list(warning_mod = NA, warning_int = NA),
-                                            model = unadjusted,
-                                            intmodel = unadjusted_int,
-                                            datagen_scenario = datagen_scenario)
-  
-  # Store results of unadjusted
-  results_unadj      <- data.table(datagen_scenario[['scen_num']],
-                                   seed,
-                                   "unadjusted",
-                                   analysis_scenario[['method']],
-                                   t(marginals_unadj),
-                                   t(coefficients_unadj),
-                                   mod_warning = NA, intmod_warning = NA)
+  # If model fitting succeeds, continue, else, in case simple error occurs in 
+  # model fitting, store error and NA for all values
+  if(class(unadjusted$value)[1] == "logistf"){
+    # Obtain warnings model estimation
+    warnings_unadj    <- obtain_warnings(premodel = unadjusted)
+    
+    # Obtain marginal risk ratio and marginal odds ratio
+    marginals_unadj   <- estimate_marginals(data = df,
+                                    modelcoefs = unadjusted$value$coefficients)
+    
+    # Obtain model coefficients and standard errors
+    coefs_unadj       <- obtain_coefficients(model = unadjusted$value,
+                                    data = df,
+                                    datagen_scenario = datagen_scenario)
+    
+    # Store results of unadjusted
+    results_unadj     <- data.table(datagen_scenario[['scen_num']],
+                                    seed,
+                                    "unadjusted",
+                                    analysis_scenario[['method']],
+                                    t(marginals_unadj),
+                                    t(coefs_unadj),
+                                    warnings_unadj)}else{
+    # Store results in case simple error occurs
+    results_unadj     <- data.table(datagen_scenario[['scen_num']],
+                                    seed,
+                                    "unadjusted",
+                                    analysis_scenario[['method']],
+                                    t(rep(NA, times = ((datagen_scenario[['nL']] + 2)*2) + 3)), # empty values for coefficients (int, A, L, R_squared), se of coefficients (int, A, L, R_squared), and marginals
+                                    mod_warning = paste(unadjusted$value)) # SimpleErrors are stored in $value
+                                    }
   
   # Full model ----
   # Estimate full model using maximum likelihood or FLIC, based on analysis scenario
-  full <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
-                               data = data,
+  full              <- tryCatch.W.E(logistf(as.formula(paste(c("Y~A" ,paste0("L",(1:datagen_scenario[['nL']]))),collapse = "+")),
+                               data = df,
+                               pl = FALSE,
+                               control = logistf.control(maxit = 50, maxstep = 2),
                                firth = isTRUE(analysis_scenario[['method']] == "FLIC"),
-                               pl = F))
+                               flic = TRUE))
   
-  # Re-estimate intercept and store try_catch values and warnings in objects
-  full <- pre_model(inputmodel = full,
-                    datagen_scenario = datagen_scenario,
-                    data = data)
-  
-  # Obtain warnings model estimation
-  warnings_full     <- obtain_warnings(premodel = full$preM,
-                                       preintmodel = full$preM_int)
-  
-  # Obtain marginal risk ratio and marginal odds ratio
-  marginals_full    <- estimate_marginals(warning = warnings_full,
-                                          data =data,
-                                          int = full$M_int$coefficients[1],
-                                          modelcoefs = full$M$coefficients)
-  
-  # Obtain model coefficients and standard errors
-  coefficients_full <- obtain_coefficients(warning = warnings_full,
-                                           model = full$M,
-                                           intmodel = full$M_int,
-                                           datagen_scenario = datagen_scenario)
-  
-  # Store results of full model
-  results_full      <- data.table(datagen_scenario[['scen_num']],
-                                  seed,
-                                  "full",
-                                  analysis_scenario[['method']],
-                                  t(marginals_full),
-                                  t(coefficients_full),
-                                  t(warnings_full))
+  # If model fitting succeeds, continue, else, in case simple error occurs in 
+  # model fitting, store error and NA for all values
+  if(class(full$value)[1] == "logistf"){
+    # Obtain warnings model estimation
+    warnings_full     <- obtain_warnings(premodel = full)
+    
+    # Obtain marginal risk ratio and marginal odds ratio
+    marginals_full    <- estimate_marginals(data = df,
+                                    modelcoefs = full$value$coefficients)
+    
+    # Obtain model coefficients and standard errors
+    coefs_full        <- obtain_coefficients(model = full$value,
+                                    data = df,
+                                    datagen_scenario = datagen_scenario)
+    
+    # Store results of full model
+    results_full      <- data.table(datagen_scenario[['scen_num']],
+                                    seed,
+                                    "full",
+                                    analysis_scenario[['method']],
+                                    t(marginals_full),
+                                    t(coefs_full),
+                                    warnings_full)}else{
+    # Store results in case simple error occurs
+    results_full      <- data.table(datagen_scenario[['scen_num']],
+                                    seed,
+                                    "full",
+                                    analysis_scenario[['method']],
+                                    t(rep(NA, times = ((datagen_scenario[['nL']] + 2)*2) + 3)),  # empty values for coefficients (int, A, L, R_squared), se of coefficients (int, A, L, R_squared), and marginals
+                                    mod_warning = paste(full$value)) # SimpleErrors are stored in $value
+                                    }
+
   
   # Selected model ----
   # Use backward elimination on full model (either ML or FLIC)
-  selected <- tryCatch.W.E(backwardf(object = full$M,
-                                     slstay = as.numeric(analysis_scenario[['pcutoff']]),
-                                     trace = FALSE,
-                                     scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
-                                     analysis_scenario = analysis_scenario)
-                           
-  )
+  selected          <- tryCatch.W.E(backwardf(object = full$value,
+                               slstay = as.numeric(analysis_scenario[['pcutoff']]),
+                               trace = FALSE,
+                               scope = c(paste0("L",(1:datagen_scenario[['nL']]))),
+                               analysis_scenario = analysis_scenario))
   
-  # Re-estimate intercept and store try_catch values and warnings in objects
-  selected <- pre_model(inputmodel = selected,
-                        datagen_scenario = datagen_scenario,
-                        data = data)
+  # If model fitting succeeds, continue, else, in case simple error occurs in 
+  # model fitting, store error and NA for all values
+  if(class(selected$value)[1] == "logistf"){
+    # Apply flic
+    intercept_sel    <- backward_flic(model = selected,
+                                      data = df)
+    
+    # Obtain warnings model estimation
+    warnings_sel     <- obtain_warnings(premodel = selected)
+    
+    # Obtain marginal risk ratio and marginal odds ratio
+    marginals_sel    <- estimate_marginals(data = df,
+                                    modelcoefs = c(intercept_sel$intercept,selected$value$coefficients[-1]))
+    
+    # Obtain model coefficients and standard errors
+    coefs_sel        <- obtain_coefficients(model = selected$value,
+                                    data = df, 
+                                    datagen_scenario = datagen_scenario)
+    coefs_sel[c("(Intercept)","se(Intercept)")] <- unlist(intercept_sel)
+    
+    # Store results of selected model
+    results_sel      <- data.table(datagen_scenario[['scen_num']], 
+                                    seed,
+                                    paste0("selected_",analysis_scenario[['pcutoff']]),
+                                    analysis_scenario[['method']],
+                                    t(marginals_sel),
+                                    t(coefs_sel),
+                                    warnings_sel)}else{
+    # Store results in case simple error occurs
+    results_sel      <- data.table(datagen_scenario[['scen_num']],
+                                    seed,
+                                    paste0("selected_",analysis_scenario[['pcutoff']]),
+                                    analysis_scenario[['method']],
+                                    t(rep(NA, times = ((datagen_scenario[['nL']] + 2)*2) + 3)),  # empty values for coefficients (int, A, L, R_squared), se of coefficients (int, A, L, R_squared), and marginals
+                                    mod_warning = paste(selected$value)) # SimpleErrors are stored in $value 
+                                    }
   
-  # Obtain warnings model estimation
-  warnings_sel     <- obtain_warnings(premodel = selected$preM,
-                                      preintmodel = selected$preM_int)
   
-  # Obtain marginal risk ratio and marginal odds ratio
-  marginals_sel    <- estimate_marginals(warning = warnings_sel,
-                                         data =data,
-                                         int = selected$M_int$coefficients[1], 
-                                         modelcoefs = selected$M$coefficients)
-  
-  # Obtain model coefficients and standard errors
-  coefficients_sel <- obtain_coefficients(warning = warnings_sel,
-                                          model = selected$M,
-                                          intmodel = selected$M_int, 
-                                          datagen_scenario = datagen_scenario)
-  
-  # Store results of selected model
-  results_sel      <- data.table(datagen_scenario[['scen_num']], 
-                                 seed,
-                                 paste0("selected_",analysis_scenario[['pcutoff']]),
-                                 analysis_scenario[['method']],
-                                 t(marginals_sel),
-                                 t(coefficients_sel),
-                                 t(warnings_sel))
   
   # Set colnames equal
   colnames(results_unadj) <- 
@@ -138,11 +158,11 @@ analyse_data <- function(analysis_scenario,
                                 "MRR",
                                 "MOR",
                                 "(Intercept)",
-                                names(data)[-1],
+                                names(df)[-1],
                                 "se(Intercept)",
-                                paste0("se(",names(data),")")[-1],
-                                "mod_warning",
-                                "intmod_warning")
+                                paste0("se(",names(df),")")[-1],
+                                "R_squared",
+                                "mod_warning")
   
   # Combine results in output matrix
   results <- rbind(results_unadj,results_full, results_sel, fill=T)
