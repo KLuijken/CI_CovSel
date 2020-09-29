@@ -34,7 +34,6 @@ gen_data <- function(nevents,
                      bYL4,
                      eventrate,
                      Yint,
-                     sd_UY,
                      rhoL,
                      seed){
   # Generate data
@@ -44,8 +43,6 @@ gen_data <- function(nevents,
   nobs         <- round(nevents * 1/eventrate, digits = 0)
   
   # Generate Y, A and L
-  UY           <- rnorm(nobs,sd_UY)
-  
   sigL         <- matrix(rhoL, 
                          nrow = nL,
                          ncol = nL)
@@ -69,10 +66,9 @@ gen_data <- function(nevents,
   A <- rbinom(nobs, 1, plogis(L %*% betasAL))
   
   # Generate outcome:
-  Y <- rbinom(nobs, 1, plogis(Yint + 
+  Y <- rbinom(nobs, 1, plogis(Yint +
                                 A * bYA + 
-                                L %*% betasYL +
-                                UY))
+                                L %*% betasYL))
   
   out_df <- data.frame(Y,A,L)
   colnames(out_df) <- c("Y","A",paste0("L",1:nL))

@@ -8,62 +8,95 @@
 
 # Helper function ----
 #------------------------------------------------------------------------------#
-# Sum values and element-wise products of each row
-compute_rowtotal <- function(x){sum(x, combn(x, m = 2, FUN = prod))}
+# Helper functions to remove scenarios that only differ with respect to ordering
+# of L effects and similar otherwise
+# 
+# Desired effect combinations and notation thereof:
+#	1:(bAL==0 & bYL==0) , 2:(bAL==0 & bYL==0.2) , 3:(bAL==0 & bYL==0.4) + 
+#	4:(bAL==0.2 & bYL==0) , 5:(bAL==0.2 & bYL==0.2) , 6:(bAL==0.2 & bYL==0.4) + 
+#	7:(bAL==0.4 & bYL==0) , 8:(bAL==0.4 & bYL==0.2) , 9:(bAL==0.4 & bYL==0.4)} 
+
+# Take exponent in computing rowtotals to avoid accidental doubles
+add_counter     <- function(x) sum(exp(x)) 
+fun_patterns_AL <- function(z) 1*(z==1 | z==2 | z==3) + 2*(z==4 | z==5 |z==6) + 3*(z==7 | z==8 |z==9)
+fun_patterns_YL <- function(z) 1*(z==1 | z==4 | z==7) + 2*(z==2 | z==5 |z==8) + 3*(z==3 | z==6 |z==9)
+
 
 # Initialize simulation scenarios ----
-# Function output: data.frame with 630 scenarios for the dgm, varying the 
+# Function output: data.frame with 3960 scenarios for the dgm, varying the 
 # strength of association between covariates and exposure/outcome, residual variance
-# of exposure and outcome, correlation between covariates, sample size and
-# number of covariates.
+# of the outcome, correlation between covariates, effective sample size and
+# event rate.
 #------------------------------------------------------------------------------#
 
 
 datagen_scenarios <- function(){
-  nevents   <- 200
+  nevents   <- c(50, 200)
   nL        <- 24
-  bYA       <- c(0,0.5)
-  bL_const  <- 0.3
-  bAL1      <- bAL2  <- bAL3  <- bAL4  <- c(0,0.5,1)
-  bYL1      <- bYL2  <- bYL3  <- bYL4  <- c(0,0.5,1)
-  eventrate <- c(0.5, 0.2, 0.03)
-  Yint      <- c(0, -1.65, -3.1)
-  sd_UY     <- c(0.01,1)
-  rhoL      <- c(0,0.3,0.7)
+  bYA       <- c(0, log(1.5))
+  bL_const  <- log(1.05)
+  bAL       <- c(0, log(1.05), log(1.2))
+  bYL       <- c(0, log(1.05), log(1.2))
+  eventrate <- c(0.2, 0.03)
+  Yint      <- c(-2.1, -4.05)
+  rhoL      <- 0.3
   
   # data.frame with simulation scenarios
-  datagen_scenarios <- expand.grid(nevents=nevents,
-                                   nL=nL,
-                                   bYA=bYA,
-                                   bL_const=bL_const,
-                                   bAL1=bAL1,
-                                   bAL2=bAL2,
-                                   bAL3=bAL3,
-                                   bAL4=bAL4,
-                                   bYL1=bYL1,
-                                   bYL2=bYL2,
-                                   bYL3=bYL3,
-                                   bYL4=bYL4,
-                                   Yint=Yint,
-                                   sd_UY=sd_UY,
-                                   rhoL=rhoL)
+  variable_grid <- expand.grid(nevents=nevents,
+                               nL=nL,
+                               bYA=bYA,
+                               bL_const=bL_const,
+                               eventrate=eventrate,
+                               rhoL=rhoL)
   
-  # Remove redundant scenarios using a counter
-  datagen_scenarios$counter <- apply(datagen_scenarios,
-                                     MARGIN=1,
-                                     FUN = function(x) compute_rowtotal(x))
-  datagen_scenarios         <- datagen_scenarios[!duplicated(
-                                     datagen_scenarios[['counter']]),]
-  datagen_scenarios$counter <- NULL
+  # 9 possible covariates
+  cov1 <- cov2  <- cov3  <- cov4  <- 1:9
+  # Identify duplicate combinations (differ only with respect to order)
+  covariate_grid <- expand.grid(cov1 = cov1,
+                                cov2 = cov2,
+                                cov3 = cov3,
+                                cov4 = cov4)
+  covariate_grid$counter    <- apply(covariate_grid,1,add_counter) 
+  covariate_grid$duplicates <- 0 
+  for (i in 2:nrow(covariate_grid)){
+    covariate_grid$duplicates[i] <- 1*(covariate_grid$counter[i] %in% 	covariate_grid$counter[1:(i-1)])		
+  }
+  # Remove duplicates
+  covariate_select <- subset(covariate_grid,subset=covariate_grid$duplicates==0)
   
-  # Add eventrate based on intercept value
-  for(i in 1:length(Yint)){
-    datagen_scenarios$eventrate[datagen_scenarios$Yint == Yint[i]] <- 
-      eventrate[i]}
+  datagen_scenarios <- data.frame(nevents = rep(variable_grid$nevents,each=nrow(covariate_select)),
+                                  nL = rep(variable_grid$nL,each=nrow(covariate_select)),
+                                  bYA = rep(variable_grid$bYA,each=nrow(covariate_select)),
+                                  bL_const = rep(variable_grid$bL_const,each=nrow(covariate_select)),
+                                  eventrate = rep(variable_grid$eventrate,each=nrow(covariate_select)),
+                                  rhoL = rep(variable_grid$rhoL,each=nrow(covariate_select)),
+                                  
+                                  cov1 = rep(covariate_select$cov1,nrow(variable_grid)),
+                                  cov2 = rep(covariate_select$cov2,nrow(variable_grid)),
+                                  cov3 = rep(covariate_select$cov3,nrow(variable_grid)),
+                                  cov4 = rep(covariate_select$cov4,nrow(variable_grid)))	
+  
+  datagen_scenarios$bAL1 <- bAL[fun_patterns_AL(datagen_scenarios$cov1)]
+  datagen_scenarios$bYL1 <- bYL[fun_patterns_YL(datagen_scenarios$cov1)]
+  datagen_scenarios$bAL2 <- bAL[fun_patterns_AL(datagen_scenarios$cov2)]
+  datagen_scenarios$bYL2 <- bYL[fun_patterns_YL(datagen_scenarios$cov2)]
+  datagen_scenarios$bAL3 <- bAL[fun_patterns_AL(datagen_scenarios$cov3)]
+  datagen_scenarios$bYL3 <- bYL[fun_patterns_YL(datagen_scenarios$cov3)]
+  datagen_scenarios$bAL4 <- bAL[fun_patterns_AL(datagen_scenarios$cov4)]
+  datagen_scenarios$bYL4 <- bYL[fun_patterns_YL(datagen_scenarios$cov4)]
+  
+  datagen_scenarios$cov1 <- 
+    datagen_scenarios$cov2 <- 
+    datagen_scenarios$cov3 <- 
+    datagen_scenarios$cov4 <- NULL
+  
+  # Read in intercepts (estimated based on large sample approximation of event rate
+  # in ./rcode/dgm/estimate_intercepts.R)
+  datagen_scenarios$Yint <- c(readRDS("./rcode/dgm/intercepts.rds"))
   
   # Add scenarios number to keep track of results
   datagen_scenarios$scen_num <- c(1:nrow(datagen_scenarios))
-
+  
   return(datagen_scenarios)
 }
 
@@ -83,4 +116,3 @@ analysis_scenarios <- function(){
   
   return(analyse_scenarios)
 }
- 
