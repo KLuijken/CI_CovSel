@@ -28,7 +28,7 @@ obtain_coefficients <- function(model,
                       paste0("se_L",seq(1:datagen_scenario[['nL']])))
   
   
-  r_squared_M <- lm(model$linear.predictors ~ data[,"Y"])
+  r_squared_M <- lm(plogis(model$linear.predictors) ~ data[,"Y"])
   r_squared   <- r_squared_M$coefficients[2]
     
   alloutput   <- c(coef_est,coef_se,r_squared)
