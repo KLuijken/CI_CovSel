@@ -6,11 +6,11 @@
 #------------------------------------------------------------------------------#
 
 # Some notes on how the data are generated:
-# Each dataset contains a binary exposure A, a binary outcome Y and a set of 
+# Each dataset contains a binary exposure A, a binary outcome Y and a set of continuous
 # covariates, L, where the number of covariates, nL, can be specified by the user in
-# sim_scen.R. Note that the number of covariates should be a multiplicative of 3,
-# since there are three levels of association between a (set of) covariates and
-# the exposure and outcome.
+# sim_scen.R. Note that the number of covariates should be a multiplicative of 2*4=8,
+# since half of the confounders are fixed and there are four levels of association 
+# between a (set of) covariates and the exposure and outcome.
 
 
 # Load libraries  ----

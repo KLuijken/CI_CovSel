@@ -11,7 +11,7 @@ fun_patterns_YL <- function(z) 1*(z==1 | z==4 | z==7) + 2*(z==2 | z==5 |z==8) + 
 
 
 # Initialize simulation scenarios ----
-# Function output: data.frame with 7920 scenarios for the dgm, varying the 
+# Function output: data.frame with 3960 scenarios for the dgm, varying the 
 # strength of association between covariates and exposure/outcome, residual variance
 # of the outcome, correlation between covariates, effective sample size and
 # event rate.

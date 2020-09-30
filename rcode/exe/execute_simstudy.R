@@ -2,9 +2,13 @@
 # Causal inference covariate selection
 # K Luijken
 #
-# Execute script to run + process + summarise simulation study
+# Workhorse to execute (run + process + summarise) simulation study
 #------------------------------------------------------------------------------#
-
+# Generate 1000 datasets for each of the 3960 scenarios, perform analyses described
+# in manuscript and specified in ./rcode/dgm/sim_scen.R and ./rcode/dgm/analyse_data.R
+# Save output per scenario under ./data/raw, processed data in ./data/summarised
+# and tables and figures in ./results.
+# Details on the functionalities and output can be found in helper scripts.
 
 # Load librairies + source code ----
 #------------------------------------------------------------------------------#
@@ -16,10 +20,10 @@ source(file = "./rcode/sumsim/diagnostics.R")
 source(file = "./rcode/visualisation/simresults_table.R")
 
 # Select datagen_scenarios and analysis_scenarios to be used
-all_datagen_scenarios <- datagen_scenarios()  # Just for reproducibility during testing
-use_datagen_scenarios <- all_datagen_scenarios[1,]
+all_datagen_scenarios <- datagen_scenarios()  # Redundant step, used for testing
+use_datagen_scenarios <- all_datagen_scenarios
 use_analysis_scenarios <- analysis_scenarios()
-rep <- 1
+rep <- 1000
 
 # Create filestructure  ----
 #------------------------------------------------------------------------------#

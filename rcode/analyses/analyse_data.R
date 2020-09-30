@@ -115,18 +115,18 @@ analyse_data <- function(analysis_scenario,
   # If model fitting succeeds, continue, else, in case simple error occurs in 
   # model fitting, store error and NA for all values
   if(class(selected$value)[1] == "logistf"){
-    # Apply flic
-    selected         <- flic(selected)
-    
     # Obtain warnings model estimation
     warnings_sel     <- obtain_warnings(premodel = selected)
     
+    # Apply flic
+    selected         <- flic(selected$value)
+    
     # Obtain marginal risk ratio and marginal odds ratio
     marginals_sel    <- estimate_marginals(data = df,
-                                    modelcoefs = selected$value$coefficients)
+                                    modelcoefs = selected$coefficients)
     
     # Obtain model coefficients and standard errors
-    coefs_sel        <- obtain_coefficients(model = selected$value,
+    coefs_sel        <- obtain_coefficients(model = selected,
                                     data = df, 
                                     datagen_scenario = datagen_scenario)
     

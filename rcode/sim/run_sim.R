@@ -7,13 +7,13 @@
 
 # Some notes on the format of the raw data output
 #------------------------------------------------------------------------------#
-# For each scenario from datagen_scenarios(), a .rds file with table of output 
-# is created. The table contains #method x #rep = 3 x 5000 = 15000 rows, 
+# For each scenario from datagen_scenarios(), an .rds file with table of output 
+# is created. The table contains #method x #rep = 3 x 1000 = 3000 rows, 
 # For example:
-#scen_num     seed           model method      MRR          MOR   mod_warning intmod_warning mod_coefs    SE(coefs)                     filepath                     
-#       1 41038673     unadjusted   FLIC  1.239323     1.507754            NA             NA        NA          ... ./data/raw/FLIC_0.157/S1.rds 
-#       1 41038673           full   FLIC 0.8809378    0.7632651            NA             NA        0.2610278   ... ./data/raw/FLIC_0.157/S1.rds 
-#       1 41038673 selected_0.157   FLIC 0.8862254    0.7730111            NA             NA        0.2679882   ... ./data/raw/FLIC_0.157/S1.rds 
+#scen_num     seed           model method      MRR          MOR     mod_coefs  SE(coefs)  R_squared  mod_warning                      filepath                     
+#       1 41038673     unadjusted   FLIC  1.239323     1.507754            NA        ...     0.0091           NA  ./data/raw/FLIC_0.157/S1.rds 
+#       1 41038673           full   FLIC 0.8809378    0.7632651     0.2610278        ...       0.19           NA  ./data/raw/FLIC_0.157/S1.rds 
+#       1 41038673 selected_0.157   FLIC 0.8862254    0.7730111     0.2679882        ...       0.08           NA  ./data/raw/FLIC_0.157/S1.rds 
 
 # Load librairies ----
 #------------------------------------------------------------------------------#
