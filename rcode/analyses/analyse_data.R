@@ -116,21 +116,19 @@ analyse_data <- function(analysis_scenario,
   # model fitting, store error and NA for all values
   if(class(selected$value)[1] == "logistf"){
     # Apply flic
-    intercept_sel    <- backward_flic(model = selected,
-                                      data = df)
+    selected         <- flic(selected)
     
     # Obtain warnings model estimation
     warnings_sel     <- obtain_warnings(premodel = selected)
     
     # Obtain marginal risk ratio and marginal odds ratio
     marginals_sel    <- estimate_marginals(data = df,
-                                    modelcoefs = c(intercept_sel$intercept,selected$value$coefficients[-1]))
+                                    modelcoefs = selected$value$coefficients)
     
     # Obtain model coefficients and standard errors
     coefs_sel        <- obtain_coefficients(model = selected$value,
                                     data = df, 
                                     datagen_scenario = datagen_scenario)
-    coefs_sel[c("(Intercept)","se(Intercept)")] <- unlist(intercept_sel)
     
     # Store results of selected model
     results_sel      <- data.table(datagen_scenario[['scen_num']], 

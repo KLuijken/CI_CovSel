@@ -3,6 +3,7 @@
 # K Luijken
 #
 # Helper function to perform backward elimination after FLIC estimation
+# (improved version not yet implemented in logistf package)
 #------------------------------------------------------------------------------#
 
 
@@ -53,15 +54,4 @@ backwardf <- function (object, scope, steps = 1000, slstay, trace = TRUE,
   if (trace) 
     cat("\n")
   return(working)
-}
-
-backward_flic <- function(model, data){
-  M          <- model$value
-  Mpred      <- as.matrix(data[,names(coef(M)[-1])]) %*% coef(M)[-1]
-  # Re-estimate intercept
-  Mintercept <- glm(data$Y ~ offset(Mpred), family = binomial)
-  intercept  <- Mintercept$coefficients
-  se_int     <- sqrt(diag(vcov(Mintercept, complete=T)))
-  
-  return(list(intercept=intercept, se_intercept = se_int))
 }
