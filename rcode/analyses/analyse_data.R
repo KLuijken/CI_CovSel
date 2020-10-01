@@ -119,16 +119,20 @@ analyse_data <- function(analysis_scenario,
     warnings_sel     <- obtain_warnings(premodel = selected)
     
     # Apply flic
-    selected         <- flic(selected$value)
+    selected_flic    <- flic(selected$value)
     
     # Obtain marginal risk ratio and marginal odds ratio
     marginals_sel    <- estimate_marginals(data = df,
-                                    modelcoefs = selected$coefficients)
+                                    modelcoefs = selected_flic$coefficients)
     
     # Obtain model coefficients and standard errors
-    coefs_sel        <- obtain_coefficients(model = selected,
+    # NOTE: this is suboptimal, as this does not save the se(Intercept) after flic,
+    # but the function "flic()" is not working properly yet since logistf package update
+    # and intercept coefficient output is not the main focus.
+    coefs_sel        <- obtain_coefficients(model = selected$value,
                                     data = df, 
                                     datagen_scenario = datagen_scenario)
+    coefs_sel["(Intercept)"] <- selected_flic$coefficients[1]
     
     # Store results of selected model
     results_sel      <- data.table(datagen_scenario[['scen_num']], 
