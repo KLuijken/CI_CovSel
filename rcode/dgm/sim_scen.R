@@ -38,7 +38,6 @@ datagen_scenarios <- function(){
   bAL       <- c(0, log(1.05), log(1.2))
   bYL       <- c(0, log(1.05), log(1.2))
   eventrate <- c(0.2, 0.03)
-  Yint      <- c(-2.1, -4.05)
   rhoL      <- 0.3
   
   # data.frame with simulation scenarios
