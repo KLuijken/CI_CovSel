@@ -12,9 +12,9 @@
 # of L effects and similar otherwise
 # 
 # Desired effect combinations and notation thereof:
-#	1:(bAL==0 & bYL==0) , 2:(bAL==0 & bYL==0.2) , 3:(bAL==0 & bYL==0.4) + 
-#	4:(bAL==0.2 & bYL==0) , 5:(bAL==0.2 & bYL==0.2) , 6:(bAL==0.2 & bYL==0.4) + 
-#	7:(bAL==0.4 & bYL==0) , 8:(bAL==0.4 & bYL==0.2) , 9:(bAL==0.4 & bYL==0.4)} 
+#	1:(bAL==0 & bYL==0) , 2:(bAL==0 & bYL==log(1.05)) , 3:(bAL==0 & bYL==log(1.2)) + 
+#	4:(bAL==log(1.05) & bYL==0) , 5:(bAL==log(1.05) & bYL==log(1.05)) , 6:(bAL==log(1.05) & bYL==log(1.2)) + 
+#	7:(bAL==log(1.2) & bYL==0) , 8:(bAL==log(1.2) & bYL==log(1.05)) , 9:(bAL==log(1.2) & bYL==log(1.2))} 
 
 # Take exponent in computing rowtotals to avoid accidental doubles
 add_counter     <- function(x) sum(exp(x)) 
