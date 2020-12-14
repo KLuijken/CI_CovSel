@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------#
-# Manuscript: Causal inference when selection of confounders is partly based on 
-#   backward elimination: likely biased, not often more efficient
+# Causal inference when selection of confounders is partly based on backward 
+#   elimination: likely biased, not often more efficient
 # Authors: K Luijken, R H H Groenwold, M van Smeden, S Strohmaier, G Heinze
 # Author script: K Luijken
 #
@@ -12,9 +12,9 @@
 ## conditional odds ratio of a full model, estimated using FLIC
 ## marginal risk ratio of a full model, estimated using predicted potential 
 #     outcomes of a FLIC model
-## conditional odds ratio of a full model, estimated using FLIC and backward 
+## conditional odds ratio of a selected model, estimated using FLIC and backward 
 #     elimination
-## marginal risk ratio of a full model, estimated using predicted potential 
+## marginal risk ratio of a selected model, estimated using predicted potential 
 #     outcomes of a FLIC model and backward elimination
 ## confidence intervals for marginal risk ratios are obtained using bootstrap
 ## the measures of relative conditional bias and root mean squared difference 
@@ -59,9 +59,9 @@ Firth_full   <- logistf(Postoperative.stroke ~ CT + Age + Gender + Smoker +
                        flic = TRUE)  # Perform intercept correction
 
 # Obtain coefficients + profile penalized likelihood CIs
-cOR_full_Firth_Est <- round( exp( coef( Firth_full)["CT"]), digits = 2)
-cOR_full_Firth_Low <- round( exp( confint(Firth_full)[2,1]), digits=2)
-cOR_full_Firth_Up  <- round( exp( confint(Firth_full)[2,2]), digits=2)
+cOR_full_Firth_Est <- round(exp(coef( Firth_full)["CT"]), digits = 2)
+cOR_full_Firth_Low <- round(exp(confint(Firth_full)[2,1]), digits=2)
+cOR_full_Firth_Up  <- round(exp(confint(Firth_full)[2,2]), digits=2)
 paste0(cOR_full_Firth_Est,
        "(95% CI, ", cOR_full_Firth_Low,
        "; ", cOR_full_Firth_Up,")")
@@ -114,9 +114,9 @@ Firth_selected  <- backward(Firth_full,
 Firth_selected      <- flic(Firth_selected)
 
 # Obtain coefficient + profile penalized likelihood CIs
-cOR_selected_Firth_Est <- round( exp( coef( Firth_selected)["CT"]), digits = 2)
-cOR_selected_Firth_Low <- round( exp( confint(Firth_selected)[2,1]), digits=2)
-cOR_selected_Firth_Up  <- round( exp( confint(Firth_selected)[2,2]), digits=2)
+cOR_selected_Firth_Est <- round(exp(coef( Firth_selected)["CT"]), digits = 2)
+cOR_selected_Firth_Low <- round(exp(confint(Firth_selected)[2,1]), digits=2)
+cOR_selected_Firth_Up  <- round(exp(confint(Firth_selected)[2,2]), digits=2)
 paste0(cOR_selected_Firth_Est,
        "(95% CI, ", cOR_selected_Firth_Low,
        "; ", cOR_selected_Firth_Up,")")
@@ -145,7 +145,7 @@ log_cOR_full <-
     log_cOR_selected_naive <- matrix(NA,
                                     ncol = length(coef(Firth_full)),
                                     nrow = b_rep,
-                                    dimnames = list(NULL, names(coef(Firth_full))))
+                                    dimnames=list(NULL,names(coef(Firth_full))))
 
 log_mRR_full     <- 
   log_mRR_selected <- 
@@ -178,6 +178,7 @@ for(i in 1:b_rep){
            all(duplicated(x)[-1L]),
            var(x)==0))]
   bs_sample <- bs_sample[,!(colnames(bs_sample) %in% drop)]
+  
   
   # Create potential outcome datasets
   All_unexposed_bs <- bs_sample
@@ -245,10 +246,10 @@ for(i in 1:b_rep){
   Firth_selected_bs <- backward(Firth_full_bs,
                                 scope = colnames(bs_sample)[
                                   !(colnames(bs_sample) %in% 
-                                      c("Postoperative.stroke","CT",drop))],
+                                      c("Postoperative.stroke","CT"))],
                                 slstay = 0.157,
                                 trace = FALSE,
-                                pl = FALSE,    # no profile likelihood CIs
+                                pl = FALSE,     # waste of computational power
                                 data = bs_sample,
                                 control = logistf.control(maxit = 200,
                                                           maxstep = 5))
@@ -273,7 +274,6 @@ for(i in 1:b_rep){
 }
 
 
-
 # Summarize results
 # Obtain mRR + CI
 mRR_full_Firth_Low <- round(quantile(exp(log_mRR_full), 0.025, na.rm = T),
@@ -294,13 +294,13 @@ paste0(round(mRR_selected_Firth_Est,digits=2),
        "; ", mRR_selected_Firth_Up,")")
 
 
-
 # Relative Conditional Bias and Root Mean Squared Difference Ratio ----
 #------------------------------------------------------------------------------#
 
 # Stability measure: selection frequencies full model
 boot_01_full <- (log_cOR_full != 0) * 1
-boot_inclusion_full <- apply(boot_01_full, 2, function(x) sum(x, na.rm=T)/length(x)*100)
+boot_inclusion_full <- apply(boot_01_full, 2, function(x) 
+  sum(x, na.rm=T)/length(x)*100)
 
 # Stability measure: selection frequencies backward eliminated model
 boot_01_selected <- (log_cOR_selected != 0) * 1
@@ -312,7 +312,7 @@ boot_inclusion_selected <- apply(boot_01_selected, 2,
 
 ## Visualize the distributions of log conditional OR
 type_boot <- c(rep("full",500), rep("selected",500), rep("selected-naive", 500))
-log_cOR <- c(log_cOR_full, log_cOR_selected, log_cOR_selected_naive)
+log_cOR   <- c(log_cOR_full, log_cOR_selected, log_cOR_selected_naive)
 
 ggplot(NULL, aes(log_cOR,fill=type_boot)) + geom_density()
 
@@ -321,10 +321,10 @@ cat("RCB (%):\n")
 (RCB_log_cOR <- (mean(log_cOR_selected)/Firth_full)-1)*100
 
 ## Root mean squared difference ratio
-RMSD_log_cOR <- sqrt(mean((log_cOR_selected - Firth_full)**2))
+RMSD_log_cOR    <- sqrt(mean((log_cOR_selected - Firth_full)**2))
 se_full_log_cOR <- sd(log_cOR_full)
 cat("RMSDR:\n")
-(RMSDR_log_cOR <- RMSD_log_cOR/se_full_log_cOR)
+(RMSDR_log_cOR  <- RMSD_log_cOR/se_full_log_cOR)
 
 ## Illustration that not repeating selection underestimates standard error
 cat("Standard error full:\n")
@@ -339,7 +339,7 @@ sqrt(mean((log_cOR_selected_naive - Firth_selected)**2))
 
 ## Visualize the distributions of log marginal RR
 type_boot <- c(rep("full",500), rep("selected",500), rep("selected-naive", 500))
-log_mRR <- c(log_mRR_full, log_mRR_selected, log_mRR_selected_naive)
+log_mRR   <- c(log_mRR_full, log_mRR_selected, log_mRR_selected_naive)
 
 ggplot(NULL, aes(log_mRR,fill = type_boot)) + geom_density()
 
@@ -349,10 +349,10 @@ cat("RCB (%):\n")
 (RCB_log_mRR <- (mean(log_mRR_selected)/Firth_full)-1)*100
 
 ## Root mean squared difference ratio
-RMSD_log_mRR <- sqrt(mean((log_mRR_selected - Firth_full)**2))
+RMSD_log_mRR    <- sqrt(mean((log_mRR_selected - Firth_full)**2))
 se_full_log_MRR <- sd(log_mRR_full)
 cat("RMSDR:\n")
-(RMSDR_log_mRR <- RMSD_log_mRR/se_full_log_MRR)
+(RMSDR_log_mRR  <- RMSD_log_mRR/se_full_log_MRR)
 
 ## Illustration that not repeating selection underestimates standard error
 cat("Standard error full:\n")
