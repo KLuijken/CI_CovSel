@@ -47,17 +47,6 @@ run_sim(rep = rep,
 
 
 
-# Summarize processed simulation output  ----
-#------------------------------------------------------------------------------#
-# summarize_sim()
-invisible(apply(use_analysis_scenarios,
-                MARGIN = 1,
-                FUN = function(x) sum_multiple_scenarios(
-                  method = x[['method']],
-                  pcutoff = x[['pcutoff']],
-                  use_datagen_scenarios = use_datagen_scenarios,
-                  estimator = "MRR")))
-
 # Diagnostic checks  ----
 #------------------------------------------------------------------------------#
 # frequency exposure outcome
@@ -67,6 +56,30 @@ diagn_freqs(use_datagen_scenarios)
 diagn_warnings()
 
 
+
+# Summarize processed simulation output  ----
+#------------------------------------------------------------------------------#
+# summarize_sim()
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) sum_multiple_scenarios(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  use_datagen_scenarios = use_datagen_scenarios,
+                  estimator = "MRR",
+                  rep = rep)))
+
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) sum_multiple_scenarios(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  use_datagen_scenarios = use_datagen_scenarios,
+                  estimator = "A",
+                  rep = rep)))
+
+
+
 # Generate output tables  ----
 #------------------------------------------------------------------------------#
 invisible(apply(use_analysis_scenarios,
@@ -74,6 +87,7 @@ invisible(apply(use_analysis_scenarios,
                 FUN = function(x) generate_overall_table(
                   method = x[['method']],
                   pcutoff = x[['pcutoff']],
+                  estimator = "MRR",
                   use_datagen_scenarios = use_datagen_scenarios)))
 
 invisible(apply(use_analysis_scenarios,
@@ -81,4 +95,22 @@ invisible(apply(use_analysis_scenarios,
                 FUN = function(x) generate_stratified_table(
                   method = x[['method']],
                   pcutoff = x[['pcutoff']],
+                  estimator = "MRR",
+                  use_datagen_scenarios = use_datagen_scenarios)))
+
+
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) generate_overall_table(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  estimator = "A",
+                  use_datagen_scenarios = use_datagen_scenarios)))
+
+invisible(apply(use_analysis_scenarios,
+                MARGIN = 1,
+                FUN = function(x) generate_stratified_table(
+                  method = x[['method']],
+                  pcutoff = x[['pcutoff']],
+                  estimator = "A",
                   use_datagen_scenarios = use_datagen_scenarios)))
