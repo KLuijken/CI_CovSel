@@ -13,164 +13,160 @@
 # Helpers to generate results table ----
 #------------------------------------------------------------------------------#
 
-generate_overall_table <- function(method, pcutoff, use_datagen_scenarios){
+generate_overall_table <- function(method, pcutoff, estimator, use_datagen_scenarios){
   # Load results
-  raw_results <- readRDS(paste0("./data/summarised/",method,"_",pcutoff,".rds"))
+  raw_results <- readRDS(paste0("./data/summarised/",
+                                method, "_",
+                                pcutoff, "_",
+                                estimator, ".rds"))
   
   results <- data.table(scen_num = unique(raw_results[,scen_num]),
-                        mse_full = raw_results[raw_results[,model]=="full",MSE_MRR],
-                        mse_selected = raw_results[raw_results[,model]=="selected_0.157",MSE_MRR])
+                        mse_full = raw_results[raw_results[,model]=="full", get(paste0("MSE_",estimator))],
+                        mse_selected = raw_results[raw_results[,model]=="selected_0.157", get(paste0("MSE_",estimator))],
+                        bias_full = raw_results[raw_results[,model]=="full", get(paste0("bias_",estimator))],
+                        bias_selected = raw_results[raw_results[,model]=="selected_0.157", get(paste0("bias_",estimator))])
   
+  # add datagenerating parameters to outcome frame
   results <- cbind(results,
-                   bYA = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYA"],
-                   bAL1 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL1"],
-                   bAL2 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL2"],
-                   bAL3 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL3"],
-                   bAL4 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL4"],
-                   bYL1 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL1"],
-                   bYL2 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL2"],
-                   bYL3 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL3"],
-                   bYL4 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL4"],
-                   rhoL = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "rhoL"],
-                   eventrate = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "eventrate"],
-                   sd_UY = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "sd_UY"])
+                use_datagen_scenarios)
   
   # Store scenarios where selection results in lower mse
   mse_benefit <- results[results[,mse_selected]<results[,mse_full],]
   
   # Of the mse_benefit scenarios, how many have instruments in dgm?
-  IVs <- mse_benefit[mse_benefit[,bYL1 == 0 & bAL1 != 0 | 
-                                   bYL2 == 0 & bAL2 != 0 | 
-                                   bYL3 == 0 & bAL3 != 0 | 
-                                   bYL4 == 0 & bAL4 != 0],]
+  IVs <- mse_benefit[mse_benefit[, (bYL1 == 0 & bAL1 != 0) | 
+                                   (bYL2 == 0 & bAL2 != 0) | 
+                                   (bYL3 == 0 & bAL3 != 0) | 
+                                   (bYL4 == 0 & bAL4 != 0)],]
   
   # Of the mse_benefit scenarios, how many have noise variables in dgm?
-  noise <- mse_benefit[mse_benefit[,bYL1 == 0 & bAL1 == 0 | 
-                                     bYL2 == 0 & bAL2 == 0 | 
-                                     bYL3 == 0 & bAL3 == 0 | 
-                                     bYL4 == 0 & bAL4 == 0],]
+  noise <- mse_benefit[mse_benefit[,(bYL1 == 0 & bAL1 == 0) | 
+                                     (bYL2 == 0 & bAL2 == 0) | 
+                                     (bYL3 == 0 & bAL3 == 0) | 
+                                     (bYL4 == 0 & bAL4 == 0)],]
   
   # Residual mse_benefit scenarios
-  other <- mse_benefit[!(mse_benefit[,scen_num] %in% c(IVs[,scen_num],noise[,scen_num])),]
+  other <- mse_benefit[!(mse_benefit[,scen_num] %in% IVs[,scen_num] | mse_benefit[,scen_num] %in% noise[,scen_num]),]
   
-  table   <- data.table(`MSE(log(MRR)) BE < full` = nrow(mse_benefit),
+  table   <- data.table(bias_full = mean(results[,bias_full]),
+                        bias_selected = mean(results[,bias_selected]),
+                        `Relative efficiency MSE(log(MRR)) BE approach`= median(results[,mse_selected]/results[,mse_full]), 
+                        `Min relative efficiency MSE(log(MRR)) BE approach`= min(results[,mse_selected]/results[,mse_full]), 
+                        `Max relative efficiency MSE(log(MRR)) BE approach`= max(results[,mse_selected]/results[,mse_full]), 
+                        `Number of scenarios MSE(log(MRR)) BE < full` = nrow(mse_benefit),
                         `At least 3 IVs in dgm` = nrow(IVs),
-                        `Similarity MSE(log(MRR)) between full and BE approach for scenarios with IVs`=
-                          ifelse(nrow(IVs)!=0, 
-                                 mean(round(IVs[,mse_selected] / IVs[,mse_full], digits = 2)),
-                                 NA), # Need to think about similarity measure
                         `At least 3 noise vars in dgm` = nrow(noise),
-                        `Similarity MSE(log(MRR)) between full and BE approach for scenarios with noise`=
-                          ifelse(nrow(noise)!=0, 
-                                 mean(round(noise[,mse_selected] / noise[,mse_full], digits = 2)),
-                                 NA), 
-                        `No IVs or noise in dgm` = nrow(mse_benefit) -  nrow(IVs) - nrow(noise),
-                        `Similarity MSE(log(MRR)) between full and BE approach for other scenarios`=
-                          ifelse(nrow(other)!=0, 
-                                 mean(round(other[,mse_selected] / other[,mse_full], digits = 2)),
-                                 NA))
+                        `No IVs or noise in dgm` = nrow(other)
+  )
   
   print(xtable(table),
-        file=paste0("./results/tables/",method,"_",pcutoff,"_extensive_sim_overall.txt"),
+        file=paste0("./results/tables/",method,"_",pcutoff,"_",estimator,"_extensive_sim_overall.txt"),
         include.rownames = FALSE)
   
 }
 
 
-generate_stratified_table <- function(method, pcutoff, use_datagen_scenarios){
+generate_stratified_table <- function(method, pcutoff, estimator, use_datagen_scenarios){
   # Load results
-  raw_results <- readRDS(paste0("./data/summarised/",method,"_",pcutoff,".rds"))
+  raw_results <- readRDS(paste0("./data/summarised/",
+                                method, "_",
+                                pcutoff, "_",
+                                estimator, ".rds"))
   
   results <- data.table(scen_num = unique(raw_results[,scen_num]),
-                        mse_full = raw_results[raw_results[,model]=="full",MSE_MRR],
-                        mse_selected = raw_results[raw_results[,model]=="selected_0.157",MSE_MRR])
+                        mse_full = raw_results[raw_results[,model]=="full", get(paste0("MSE_",estimator))],
+                        mse_selected = raw_results[raw_results[,model]=="selected_0.157", get(paste0("MSE_",estimator))],
+                        bias_full = raw_results[raw_results[,model]=="full", get(paste0("bias_",estimator))],
+                        bias_selected = raw_results[raw_results[,model]=="selected_0.157", get(paste0("bias_",estimator))])
   
   results <- cbind(results,
-                   bYA = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYA"],
-                   bAL1 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL1"],
-                   bAL2 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL2"],
-                   bAL3 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL3"],
-                   bAL4 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bAL4"],
-                   bYL1 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL1"],
-                   bYL2 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL2"],
-                   bYL3 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL3"],
-                   bYL4 = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "bYL4"],
-                   rhoL = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "rhoL"],
-                   eventrate = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "eventrate"],
-                   sd_UY = use_datagen_scenarios[use_datagen_scenarios$scen_num == results[,scen_num], "sd_UY"])
-  
+                   use_datagen_scenarios)
   
   # Stratify the table
-  levels_sd_UY <- unique(use_datagen_scenarios[,"sd_UY"])
+  levels_bYA <- unique(use_datagen_scenarios[,"bYA"])
   levels_eventrate <- unique(use_datagen_scenarios[,"eventrate"])
-  levels_rhoL <- unique(use_datagen_scenarios[,"rhoL"])
+  levels_nevents <- unique(use_datagen_scenarios[,"nevents"])
   
-  stratify <- expand.grid(rhoL = levels_rhoL, eventrate = levels_eventrate, sd_UY = levels_sd_UY)
+  stratify <- expand.grid(nevents = levels_nevents, eventrate = levels_eventrate, bYA = levels_bYA)
   
-  stratify <- data.table(sd_UY = stratify[,"sd_UY"],
-                      eventrate = stratify[,"eventrate"],
-                      rhoL = stratify[,"rhoL"])
+  stratify <- data.table(bYA = stratify[,"bYA"],
+                         eventrate = stratify[,"eventrate"],
+                         nevents = stratify[,"nevents"])
   
-  table <- data.frame(matrix(NA, nrow = nrow(stratify), ncol = 7))
-  colnames(table) <- c("MSE(log(MRR)) BE < full",
+  table <- data.frame(matrix(NA, nrow = nrow(stratify), ncol = 9))
+  colnames(table) <- c("bias_full",
+                       "bias_selected",
+                       "Relative efficiency MSE(log(MRR)) BE approach", 
+                       "Min relative efficiency MSE(log(MRR)) BE approach", 
+                       "Max relative efficiency MSE(log(MRR)) BE approach", 
+                       "Number of scenarios MSE(log(MRR)) BE < full",
                        "At least 3 IVs in dgm",
-                       "Similarity MSE(log(MRR)) between full and BE approach for scenarios with IVs",
                        "At least 3 noise vars in dgm",
-                       "Similarity MSE(log(MRR)) between full and BE approach for scenarios with noise",
-                       "No IVs or noise in dgm",
-                       "Similarity MSE(log(MRR)) between full and BE approach for other scenarios")
+                       "No IVs or noise in dgm")
   
   for(i in 1:nrow(stratify)){
     # Store scenarios where selection results in lower mse
-    mse_benefit <- results[results[, sd_UY == stratify[i,sd_UY] &
+    mse_benefit <- results[results[, bYA == stratify[i,bYA] &
                                      eventrate == stratify[i,eventrate] &
-                                     rhoL == stratify[i,rhoL] &
-                                   mse_selected < mse_full],]
+                                     nevents == stratify[i,nevents] &
+                                     mse_selected < mse_full],]
     
     # Of the mse_benefit scenarios, how many have instruments in dgm?
-    IVs <- mse_benefit[mse_benefit[, sd_UY == stratify[i,sd_UY] &
+    IVs <- mse_benefit[mse_benefit[, bYA == stratify[i,bYA] &
                                      eventrate == stratify[i,eventrate] &
-                                     rhoL == stratify[i,rhoL] & ( 
-                                     bYL1 == 0 & bAL1 != 0 | 
-                                     bYL2 == 0 & bAL2 != 0 | 
-                                     bYL3 == 0 & bAL3 != 0 | 
-                                     bYL4 == 0 & bAL4 != 0)],]
+                                     nevents == stratify[i,nevents] & ( 
+                                       bYL1 == 0 & bAL1 != 0 | 
+                                         bYL2 == 0 & bAL2 != 0 | 
+                                         bYL3 == 0 & bAL3 != 0 | 
+                                         bYL4 == 0 & bAL4 != 0)],]
     
     # Of the mse_benefit scenarios, how many have noise variables in dgm?
-    noise <- mse_benefit[mse_benefit[, sd_UY == stratify[i,sd_UY] &
+    noise <- mse_benefit[mse_benefit[, bYA == stratify[i,bYA] &
                                        eventrate == stratify[i,eventrate] &
-                                       rhoL == stratify[i,rhoL] & (
-                                       bYL1 == 0 & bAL1 == 0 | 
-                                       bYL2 == 0 & bAL2 == 0 | 
-                                       bYL3 == 0 & bAL3 == 0 | 
-                                       bYL4 == 0 & bAL4 == 0)],]
+                                       nevents == stratify[i,nevents] & (
+                                         bYL1 == 0 & bAL1 == 0 | 
+                                           bYL2 == 0 & bAL2 == 0 | 
+                                           bYL3 == 0 & bAL3 == 0 | 
+                                           bYL4 == 0 & bAL4 == 0)],]
     
     # Residual mse_benefit scenarios
-    other <- mse_benefit[!(mse_benefit[,scen_num] %in% c(IVs[,scen_num],noise[,scen_num])),]
+    other <- mse_benefit[!(mse_benefit[,scen_num] %in% IVs[,scen_num] | mse_benefit[,scen_num] %in% noise[,scen_num]),]
     
     # Fill final output table
-    table[i,"MSE(log(MRR)) BE < full"] <- nrow(mse_benefit)
+    table[i,"bias_full"] <- mean(results[results[, bYA == stratify[i,bYA] &
+                                                   eventrate == stratify[i,eventrate] &
+                                                   nevents == stratify[i,nevents]],bias_full])
+    table[i,"bias_selected"]<- mean(results[results[, bYA == stratify[i,bYA] &
+                                                      eventrate == stratify[i,eventrate] &
+                                                      nevents == stratify[i,nevents]],bias_selected])
+    table[i,"Relative efficiency MSE(log(MRR)) BE approach"] <- median(results[results[, bYA == stratify[i,bYA] &
+                                                                                         eventrate == stratify[i,eventrate] &
+                                                                                         nevents == stratify[i,nevents]],mse_selected]/
+                                                                         results[results[, bYA == stratify[i,bYA] &
+                                                                                           eventrate == stratify[i,eventrate] &
+                                                                                           nevents == stratify[i,nevents]],mse_full]) 
+    table[i,"Min relative efficiency MSE(log(MRR)) BE approach"] <- min(results[results[, bYA == stratify[i,bYA] &
+                                                                                          eventrate == stratify[i,eventrate] &
+                                                                                          nevents == stratify[i,nevents]],mse_selected]/
+                                                                          results[results[, bYA == stratify[i,bYA] &
+                                                                                            eventrate == stratify[i,eventrate] &
+                                                                                            nevents == stratify[i,nevents]],mse_full]) 
+    table[i,"Max relative efficiency MSE(log(MRR)) BE approach"] <- max(results[results[, bYA == stratify[i,bYA] &
+                                                                                          eventrate == stratify[i,eventrate] &
+                                                                                          nevents == stratify[i,nevents]],mse_selected]/
+                                                                          results[results[, bYA == stratify[i,bYA] &
+                                                                                            eventrate == stratify[i,eventrate] &
+                                                                                            nevents == stratify[i,nevents]],mse_full])
+    table[i,"Number of scenarios MSE(log(MRR)) BE < full"] <- nrow(mse_benefit)
     table[i,"At least 3 IVs in dgm"] <- nrow(IVs)
-    table[i,"Similarity MSE(log(MRR)) between full and BE approach for scenarios with IVs"] <- 
-                            ifelse(nrow(IVs)!=0, 
-                                   mean(round(IVs[,mse_selected] / IVs[,mse_full], digits = 2)),
-                                   NA) # Need to think about similarity measure
     table[i,"At least 3 noise vars in dgm"] <- nrow(noise)
-    table[i,"Similarity MSE(log(MRR)) between full and BE approach for scenarios with noise"] <-
-                            ifelse(nrow(noise)!=0, 
-                                   mean(round(noise[,mse_selected] / noise[,mse_full], digits = 2)),
-                                   NA)
-    table[i,"No IVs or noise in dgm"] <- nrow(mse_benefit) -  nrow(IVs) - nrow(noise)
-    table[i,"Similarity MSE(log(MRR)) between full and BE approach for other scenarios"] <-
-                            ifelse(nrow(other)!=0, 
-                                   mean(round(other[,mse_selected] / other[,mse_full], digits = 2)),
-                                   NA)
+    table[i,"No IVs or noise in dgm"] <- nrow(other)
   }
-
+  
   output <- cbind(stratify,table)
   
   print(xtable(output),
-        file=paste0("./results/tables/",method,"_",pcutoff,"_extensive_sim_stratified.txt"),
+        file=paste0("./results/tables/",method,"_",pcutoff,"_",estimator,"_extensive_sim_stratified.txt"),
         include.rownames = FALSE)
   
 }
