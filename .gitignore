@@ -1,14 +1,13 @@
 .Rproj.user
-results/figures/
-results/output/
-results/tables/
-data/raw
-data/summarised
-data/poc
-data/diagnostics
-ToDo.txt
+results/
+data/
+data_checkround/
 thoughts/
 
 .Rhistory
-*.rds
 *.Rproj
+*.rds
+*.RData
+*.txt
+*.zip
+*.pdf
