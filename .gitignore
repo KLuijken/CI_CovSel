@@ -3,6 +3,7 @@ results/
 data/
 data_checkround/
 thoughts/
+rcode/add-ons/supplement_simulations.R
 
 .Rhistory
 *.Rproj
