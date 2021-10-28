@@ -1,10 +1,10 @@
 # CICovsel
 
 ## Version 1.0.0
-Code of the simulation study from the manuscript 'Causal inference when selection of confounders is partly based on backward elimination: likely biased, rarely more efficient'.
+Code of the simulation study from the manuscript 'A comparison of full model specification and backward elimination of potential confounders when estimating marginal and conditional causal effects on binary outcomes from observational data'.
 
 ## Generating data and running simulation study
-The R code in ./rcode/poc performs a proof of concept simulation. The results are stored as .rds file in .data/poc/
+The R code in ./rcode/add-ons/poc performs a proof of concept simulation. The results are stored as .rds file in .data/poc/
 
 The R code in /rcode/dgm/ can be used to generate the data and the R code in /rcode/sim/ can be used to run the simulation study. Data are saved as .rds files in /data/raw/.
 
