@@ -1,7 +1,8 @@
 #------------------------------------------------------------------------------#
-# Causal inference when selection of confounders is partly based on backward 
-#   elimination: likely biased, not often more efficient
-# Authors: K Luijken, R H H Groenwold, M van Smeden, S Strohmaier, G Heinze
+# A comparison of full model specification and backward elimination of potential
+#   confounders when estimating marginal and conditional causal effects on 
+#   binary outcomes from observational data
+# Authors: K Luijken, S Strohmaier, M van Smeden, R H H Groenwold, G Heinze
 # Author script: K Luijken
 #
 # Perform CABG example analysis
@@ -16,9 +17,10 @@
 #     elimination
 ## marginal risk ratio of a selected model, estimated using predicted potential 
 #     outcomes of a FLIC model and backward elimination
-## confidence intervals for marginal risk ratios are obtained using bootstrap
-## the measures of relative conditional bias and root mean squared difference 
-#     ratio, described in section 5 of the manuscript.
+## confidence intervals are obtained using bootstrap, in which the model select-
+#     ion process is repeated
+## computation of the measures of relative conditional bias and root mean 
+#     squared difference ratio.
 
 # All analyses accompanying the manuscript can be found on https://github.com/KLuijken/CI_CovSel
 
@@ -26,7 +28,6 @@
 #------------------------------------------------------------------------------#
 library(logistf)
 library(ggplot2)
-
 
 # Generate simulated data ----
 #------------------------------------------------------------------------------#
@@ -37,7 +38,6 @@ set.seed(20200618)
 CABG_data<- generate_data(N = 2266,
               betaTr.zero = FALSE,
               avsu = FALSE)
-
 
 # Conditional OR, FLIC, full model ----
 #------------------------------------------------------------------------------#
@@ -113,13 +113,15 @@ Firth_selected  <- backward(Firth_full,
                             pl = TRUE)
 Firth_selected      <- flic(Firth_selected)
 
-# Obtain coefficient + profile penalized likelihood CIs
+# Obtain coefficient + profile penalized likelihood CIs (invalid CIs)
 cOR_selected_Firth_Est <- round(exp(coef( Firth_selected)["CT"]), digits = 2)
-cOR_selected_Firth_Low <- round(exp(confint(Firth_selected)[2,1]), digits=2)
-cOR_selected_Firth_Up  <- round(exp(confint(Firth_selected)[2,2]), digits=2)
+cOR_selected_naive_Firth_Low <- round(exp(confint(Firth_selected)[2,1]),
+                                      digits=2)
+cOR_selected_naive_Firth_Up  <- round(exp(confint(Firth_selected)[2,2]),
+                                      digits=2)
 paste0(cOR_selected_Firth_Est,
-       "(95% CI, ", cOR_selected_Firth_Low,
-       "; ", cOR_selected_Firth_Up,")")
+       "(95% CI, ", cOR_selected_naive_Firth_Low,
+       "; ", cOR_selected_naive_Firth_Up,")")
 
 
 # Marginal RR, FLIC, backward elimination ----
@@ -206,6 +208,8 @@ for(i in 1:b_rep){
   PredA1 <- as.vector(predict(Firth_full_bs, 
                               newdata = All_exposed_bs, type = "response"))
   
+  
+  
   # Estimate mRR in bootstrap sample
   log_mRR_full[i,] <- log(mean(PredA1)/mean(PredA0))
   
@@ -275,6 +279,15 @@ for(i in 1:b_rep){
 
 
 # Summarize results
+# Obtain valid cOR CIs
+cOR_selected_Firth_Low <- round(quantile(exp(log_cOR_selected), 0.025),
+                                digits = 2)
+cOR_selected_Firth_Up  <- round(quantile(exp(log_cOR_selected), 0.975), 
+                                digits = 2)
+paste0(round(cOR_selected_Firth_Est,digits=2),
+       "(95% CI, ", cOR_selected_Firth_Low,
+       "; ", cOR_selected_Firth_Up,")")
+
 # Obtain mRR + CI
 mRR_full_Firth_Low <- round(quantile(exp(log_mRR_full), 0.025, na.rm = T),
                             digits = 2)
@@ -306,7 +319,6 @@ boot_inclusion_full <- apply(boot_01_full, 2, function(x)
 boot_01_selected <- (log_cOR_selected != 0) * 1
 boot_inclusion_selected <- apply(boot_01_selected, 2, 
                                  function(x) sum(x, na.rm=T)/length(x)*100)
-
 
 # Conditional OR ----
 
@@ -342,7 +354,6 @@ type_boot <- c(rep("full",500), rep("selected",500), rep("selected-naive", 500))
 log_mRR   <- c(log_mRR_full, log_mRR_selected, log_mRR_selected_naive)
 
 ggplot(NULL, aes(log_mRR,fill = type_boot)) + geom_density()
-
 
 ## Relative conditional bias
 cat("RCB (%):\n")

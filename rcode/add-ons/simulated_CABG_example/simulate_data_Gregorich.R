@@ -182,11 +182,13 @@ generate_data <- function(N, betaTr.zero = F, avsu = F){
   
   prob_CT <- generate_treatment(sim_data, avsu = T)
   CT_tmp = rbinom(N,1,prob_CT)
+  #CT_tmp = 1 - rbinom(N,1,prob_CT)
   
   sum(CT_tmp==1) #1132
   sum(CT_tmp==0) #1368
   
   CT <- ifelse(CT_tmp==1, CT <- 0.5, CT <- -0.5)
+  #CT <- ifelse(CT_tmp==1, CT <- -0.5, CT <- 0.5)
   sim_data <- cbind(CT,sim_data)
   
   
@@ -218,6 +220,8 @@ generate_data <- function(N, betaTr.zero = F, avsu = F){
 
   sim_data <- cbind("Postoperative.stroke"=stroke, sim_data)
   sim_data$CT <- CT_tmp
+  sim_data$CT <- 1 - sim_data$CT
+  
   return(sim_data)
 }
 
